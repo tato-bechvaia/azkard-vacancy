@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  EMPLOYER
+  CANDIDATE
+}
+
+enum JobStatus {
+  OPEN
+  CLOSED
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWING
+  SHORTLISTED
+  REJECTED
+  HIRED
+}
+
+model User {
+  id               Int               @id @default(autoincrement())
+  email            String            @unique
+  passwordHash     String
+  role             Role
+  createdAt        DateTime          @default(now())
+  employerProfile  EmployerProfile?
+  candidateProfile CandidateProfile?
+}
+
+model EmployerProfile {
+  id          Int     @id @default(autoincrement())
+  userId      Int     @unique
+  companyName String
+  description String?
+  website     String?
+  logoUrl     String?
+  user        User    @relation(fields: [userId], references: [id])
+  jobs        Job[]
+}
+
+model CandidateProfile {
+  id           Int           @id @default(autoincrement())
+  userId       Int           @unique
+  fullName     String
+  headline     String?
+  location     String?
+  cvUrl        String?
+  user         User          @relation(fields: [userId], references: [id])
+  applications Application[]
+}
+
+model Job {
+  id                Int             @id @default(autoincrement())
+  title             String
+  description       String
+  location          String?
+  salaryMin         Int?
+  salaryMax         Int?
+  status            JobStatus       @default(OPEN)
+  createdAt         DateTime        @default(now())
+  employerProfileId Int
+  employer          EmployerProfile @relation(fields: [employerProfileId], references: [id])
+  applications      Application[]
+}
+
+model Application {
+  id                 Int               @id @default(autoincrement())
+  jobId              Int
+  candidateProfileId Int
+  status             ApplicationStatus @default(PENDING)
+  coverLetter        String?
+  appliedAt          DateTime          @default(now())
+  job                Job               @relation(fields: [jobId], references: [id])
+  candidate          CandidateProfile  @relation(fields: [candidateProfileId], references: [id])
+}
