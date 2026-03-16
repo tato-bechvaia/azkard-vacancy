@@ -12,9 +12,28 @@ enum Role {
   CANDIDATE
 }
 
+enum JobRegime {
+  REMOTE
+  HYBRID
+  FULL_TIME
+}
+
 enum JobStatus {
-  OPEN
+  HIRING
   CLOSED
+}
+
+enum Experience {
+  NONE
+  ONE_TO_THREE
+  THREE_TO_FIVE
+  FIVE_PLUS
+}
+
+enum ApplicationMethod {
+  CV_ONLY
+  FORM_ONLY
+  BOTH
 }
 
 enum ApplicationStatus {
@@ -30,6 +49,8 @@ model User {
   email            String            @unique
   passwordHash     String
   role             Role
+  isVerified       Boolean           @default(false)
+  verifyCode       String?
   createdAt        DateTime          @default(now())
   employerProfile  EmployerProfile?
   candidateProfile CandidateProfile?
@@ -58,16 +79,22 @@ model CandidateProfile {
 }
 
 model Job {
-  id                Int             @id @default(autoincrement())
+  id                Int               @id @default(autoincrement())
   title             String
   description       String
   location          String?
-  salaryMin         Int?
+  salaryMin         Int
   salaryMax         Int?
-  status            JobStatus       @default(OPEN)
-  createdAt         DateTime        @default(now())
+  currency          String            @default("GEL")
+  jobRegime         JobRegime
+  jobPeriod         String?
+  experience        Experience        @default(NONE)
+  applicationMethod ApplicationMethod @default(CV_ONLY)
+  status            JobStatus         @default(HIRING)
+  views             Int               @default(0)
+  createdAt         DateTime          @default(now())
   employerProfileId Int
-  employer          EmployerProfile @relation(fields: [employerProfileId], references: [id])
+  employer          EmployerProfile   @relation(fields: [employerProfileId], references: [id])
   applications      Application[]
 }
 
@@ -77,6 +104,7 @@ model Application {
   candidateProfileId Int
   status             ApplicationStatus @default(PENDING)
   coverLetter        String?
+  formData           Json?
   appliedAt          DateTime          @default(now())
   job                Job               @relation(fields: [jobId], references: [id])
   candidate          CandidateProfile  @relation(fields: [candidateProfileId], references: [id])
