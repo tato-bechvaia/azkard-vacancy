@@ -6,6 +6,8 @@ import { useAuth } from '../store/AuthContext';
 export default function EmployerDashboard() {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [applicants, setApplicants]   = useState([]);
   const [jobs, setJobs] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
@@ -43,6 +45,12 @@ export default function EmployerDashboard() {
     if (!window.confirm('Delete this job?')) return;
     await api.delete(`/jobs/${id}`);
     fetchJobs();
+  };
+
+  const viewApplicants = async (job) => {
+    const { data } = await api.get(`/applications/job/${job.id}`);
+    setApplicants(data);
+    setSelectedJob(job);
   };
 
   return (
@@ -143,6 +151,11 @@ export default function EmployerDashboard() {
                   className='text-sm text-teal-600 hover:underline'>
                   View Post
                 </button>
+                <button
+                   onClick={() => viewApplicants(job)}
+                   className='text-sm text-teal-600 hover:underline'>
+                   View Applicants ({job._count.applications})
+                </button>
                 {job.status === 'HIRING' && (
                   <button onClick={() => handleClose(job.id)} className='text-sm text-slate-500 hover:underline'>
                     Close Job
@@ -154,6 +167,45 @@ export default function EmployerDashboard() {
               </div>
             </div>
           ))}
+            {selectedJob && (
+            <div className='mt-8'>
+                <div className='flex justify-between items-center mb-4'>
+                <h3 className='text-xl font-bold text-slate-800'>
+                    Applicants for: {selectedJob.title}
+                </h3>
+                <button onClick={() => setSelectedJob(null)} className='text-sm text-slate-400 hover:underline'>
+                    Close
+                </button>
+                </div>
+                {applicants.length === 0 ? (
+                <p className='text-slate-400 text-center py-8'>No applicants yet</p>
+                ) : (
+                <div className='space-y-4'>
+                    {applicants.map(app => (
+                    <div key={app.id} className='bg-white rounded-xl shadow-sm p-6'>
+                        <div className='flex justify-between items-start'>
+                        <div>
+                            <h4 className='font-semibold text-slate-800'>{app.candidate.fullName}</h4>
+                            {app.candidate.headline && (
+                            <p className='text-slate-500 text-sm'>{app.candidate.headline}</p>
+                            )}
+                            {app.coverLetter && (
+                            <p className='text-slate-600 text-sm mt-2 italic'>"{app.coverLetter}"</p>
+                            )}
+                            <p className='text-slate-400 text-xs mt-2'>
+                            Applied {new Date(app.appliedAt).toLocaleDateString()}
+                            </p>
+                        </div>
+                        <span className='bg-yellow-50 text-yellow-700 text-xs px-3 py-1 rounded-full'>
+                            {app.status}
+                        </span>
+                        </div>
+                    </div>
+                    ))}
+                </div>
+                )}
+            </div>
+            )}  
           {jobs.length === 0 && (
             <div className='text-center py-12 text-slate-400'>
               No jobs posted yet. Click "Post New Job" to get started!
