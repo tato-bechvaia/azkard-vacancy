@@ -3,11 +3,13 @@ const prisma = new PrismaClient();
 
 const listJobs = async (req, res, next) => {
   try {
-    const { search, location, page = 1, limit = 10 } = req.query;
+    const { search, location, regime, experience, page = 1, limit = 10 } = req.query;
     const where = {
-      status: 'OPEN',
+      status: 'HIRING',
       ...(search && { title: { contains: search, mode: 'insensitive' } }),
       ...(location && { location: { contains: location, mode: 'insensitive' } }),
+      ...(regime && { jobRegime: regime }),
+      ...(experience && { experience }),
     };
     const [jobs, total] = await Promise.all([
       prisma.job.findMany({
@@ -30,13 +32,20 @@ const getJob = async (req, res, next) => {
       include: { employer: { select: { companyName: true, logoUrl: true, website: true } } },
     });
     if (!job) return res.status(404).json({ message: 'Job not found' });
+
+    // increment views
+    await prisma.job.update({
+      where: { id: +req.params.id },
+      data: { views: { increment: 1 } },
+    });
+
     res.json(job);
   } catch (err) { next(err); }
 };
 
 const createJob = async (req, res, next) => {
   try {
-    const { title, description, location, salaryMin, salaryMax } = req.body;
+    const { title, description, location, salaryMin, salaryMax, jobRegime, jobPeriod, experience, applicationMethod } = req.body;
     const employer = await prisma.employerProfile.findUnique({
       where: { userId: req.user.id },
     });
@@ -45,8 +54,12 @@ const createJob = async (req, res, next) => {
     const job = await prisma.job.create({
       data: {
         title, description, location,
-        salaryMin: salaryMin ? +salaryMin : null,
+        salaryMin: +salaryMin,
         salaryMax: salaryMax ? +salaryMax : null,
+        jobRegime,
+        jobPeriod,
+        experience: experience || 'NONE',
+        applicationMethod: applicationMethod || 'CV_ONLY',
         employerProfileId: employer.id,
       },
     });
@@ -71,4 +84,18 @@ const deleteJob = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { listJobs, getJob, createJob, updateJob, deleteJob };
+const myJobs = async (req, res, next) => {
+  try {
+    const employer = await prisma.employerProfile.findUnique({
+      where: { userId: req.user.id },
+    });
+    const jobs = await prisma.job.findMany({
+      where: { employerProfileId: employer.id },
+      include: { _count: { select: { applications: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(jobs);
+  } catch (err) { next(err); }
+};
+
+module.exports = { listJobs, getJob, createJob, updateJob, deleteJob, myJobs };
