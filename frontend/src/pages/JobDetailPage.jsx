@@ -7,6 +7,7 @@ const REGIME_LABELS = { REMOTE: 'Remote', HYBRID: 'Hybrid', FULL_TIME: 'Full Tim
 const EXP_LABELS = { NONE: 'No experience', ONE_TO_THREE: '1-3 years', THREE_TO_FIVE: '3-5 years', FIVE_PLUS: '5+ years' };
 
 export default function JobDetailPage() {
+  const [cvFile, setCvFile] = useState(null);  
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -22,7 +23,13 @@ export default function JobDetailPage() {
   const handleApply = async () => {
     if (!user) return navigate('/login');
     try {
-      await api.post(`/applications/job/${id}`, { coverLetter });
+      const formData = new FormData();
+      formData.append('coverLetter', coverLetter);
+      if (cvFile) formData.append('cv', cvFile);
+  
+      await api.post(`/applications/job/${id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       setApplied(true);
       setMessage('Application submitted successfully!');
     } catch (err) {
@@ -78,21 +85,32 @@ export default function JobDetailPage() {
 
           {user?.role === 'CANDIDATE' && !applied && (
             <div className='border-t pt-6'>
-              <h2 className='text-lg font-semibold text-slate-800 mb-3'>Apply for this job</h2>
-              <textarea
+                <h2 className='text-lg font-semibold text-slate-800 mb-3'>Apply for this job</h2>
+                <textarea
                 placeholder='Cover letter (optional)...'
                 value={coverLetter}
                 onChange={e => setCoverLetter(e.target.value)}
                 rows={4}
                 className='w-full border border-slate-200 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-teal-500'
-              />
-              <button
+                />
+                <div className='mb-4'>
+                <label className='block text-sm font-medium text-slate-700 mb-2'>
+                    Upload CV (PDF or Word)
+                </label>
+                <input
+                    type='file'
+                    accept='.pdf,.doc,.docx'
+                    onChange={e => setCvFile(e.target.files[0])}
+                    className='w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none'
+                />
+                </div>
+                <button
                 onClick={handleApply}
                 className='w-full bg-teal-600 text-white py-3 rounded-xl hover:bg-teal-700 font-medium text-lg'>
                 Submit Application
-              </button>
+                </button>
             </div>
-          )}
+            )}
 
           {message && (
             <p className={`mt-4 text-center font-medium ${applied ? 'text-teal-600' : 'text-red-500'}`}>

@@ -4,6 +4,8 @@ const prisma = new PrismaClient();
 const applyToJob = async (req, res, next) => {
   try {
     const { coverLetter } = req.body;
+    const cvUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
     const candidate = await prisma.candidateProfile.findUnique({
       where: { userId: req.user.id },
     });
@@ -19,6 +21,7 @@ const applyToJob = async (req, res, next) => {
         jobId: +req.params.jobId,
         candidateProfileId: candidate.id,
         coverLetter,
+        cvUrl,
       },
     });
     res.status(201).json(application);

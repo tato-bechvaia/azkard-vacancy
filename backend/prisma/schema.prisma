@@ -104,6 +104,7 @@ model Application {
   candidateProfileId Int
   status             ApplicationStatus @default(PENDING)
   coverLetter        String?
+  cvUrl              String?
   formData           Json?
   appliedAt          DateTime          @default(now())
   job                Job               @relation(fields: [jobId], references: [id])
