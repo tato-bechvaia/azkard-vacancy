@@ -14,37 +14,72 @@ export default function LoginPage() {
     try {
       const { data } = await api.post('/auth/login', form);
       login(data.token, data.role);
-      navigate('/jobs');
+      navigate(data.role === 'EMPLOYER' ? '/employer' : '/candidate');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     }
   };
 
   return (
-    <div className='min-h-screen flex items-center justify-center bg-slate-50'>
-      <div className='bg-white p-8 rounded-2xl shadow-lg w-full max-w-md'>
-        <h1 className='text-2xl font-bold text-slate-800 mb-6'>Sign in to Azkard</h1>
-        {error && <p className='text-red-500 mb-4 text-sm'>{error}</p>}
-        <form onSubmit={handleSubmit} className='space-y-4'>
-          <input
-            type='email' placeholder='Email' required
-            value={form.email}
-            onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
-            className='w-full border border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500'
-          />
-          <input
-            type='password' placeholder='Password' required
-            value={form.password}
-            onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-            className='w-full border border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500'
-          />
-          <button type='submit'
-            className='w-full bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700 font-medium'>
-            Sign in
-          </button>
-        </form>
-        <p className='mt-4 text-sm text-slate-500'>
-          No account? <Link to='/register' className='text-teal-600 hover:underline'>Register</Link>
+    <div className='min-h-screen bg-dark-600 flex items-center justify-center px-4'>
+      <div className='w-full max-w-md'>
+
+        {/* Logo */}
+        <div className='text-center mb-8'>
+          <div
+            onClick={() => navigate('/')}
+            className='inline-flex items-center gap-2 cursor-pointer mb-6'>
+            <div className='w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center'>
+              <span className='text-white font-bold'>A</span>
+            </div>
+            <span className='text-white font-bold text-2xl'>Azkard</span>
+          </div>
+          <h1 className='text-2xl font-bold text-white'>Welcome back</h1>
+          <p className='text-dark-100 mt-2'>Sign in to your account</p>
+        </div>
+
+        {/* Form */}
+        <div className='bg-dark-400 border border-white/5 rounded-2xl p-8'>
+          {error && (
+            <div className='bg-red-500/10 border border-red-500/20 text-red-400 text-sm px-4 py-3 rounded-lg mb-6'>
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className='space-y-4'>
+            <div>
+              <label className='text-dark-100 text-sm font-medium block mb-2'>Email</label>
+              <input
+                type='email' required
+                value={form.email}
+                onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+                className='w-full bg-dark-500 border border-white/10 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-500 transition placeholder-dark-200'
+                placeholder='you@example.com'
+              />
+            </div>
+            <div>
+              <label className='text-dark-100 text-sm font-medium block mb-2'>Password</label>
+              <input
+                type='password' required
+                value={form.password}
+                onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
+                className='w-full bg-dark-500 border border-white/10 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-500 transition placeholder-dark-200'
+                placeholder='••••••••'
+              />
+            </div>
+            <button
+              type='submit'
+              className='w-full bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-semibold transition mt-2'>
+              Sign in
+            </button>
+          </form>
+        </div>
+
+        <p className='text-center text-dark-100 text-sm mt-6'>
+          No account?{' '}
+          <Link to='/register' className='text-brand-400 hover:text-brand-300 transition'>
+            Create one free
+          </Link>
         </p>
       </div>
     </div>

@@ -14,59 +14,110 @@ export default function RegisterPage() {
     try {
       const { data } = await api.post('/auth/register', form);
       login(data.token, data.role);
-      navigate('/jobs');
+      navigate(data.role === 'EMPLOYER' ? '/employer' : '/candidate');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
     }
   };
 
   return (
-    <div className='min-h-screen flex items-center justify-center bg-slate-50'>
-      <div className='bg-white p-8 rounded-2xl shadow-lg w-full max-w-md'>
-        <h1 className='text-2xl font-bold text-slate-800 mb-6'>Create your account</h1>
-        {error && <p className='text-red-500 mb-4 text-sm'>{error}</p>}
-        <form onSubmit={handleSubmit} className='space-y-4'>
-          <select
-            value={form.role}
-            onChange={e => setForm(p => ({ ...p, role: e.target.value }))}
-            className='w-full border border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500'>
-            <option value='CANDIDATE'>I am looking for a job</option>
-            <option value='EMPLOYER'>I am hiring</option>
-          </select>
-          {form.role === 'CANDIDATE' ? (
-            <input
-              type='text' placeholder='Full Name' required
-              value={form.fullName}
-              onChange={e => setForm(p => ({ ...p, fullName: e.target.value }))}
-              className='w-full border border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500'
-            />
-          ) : (
-            <input
-              type='text' placeholder='Company Name' required
-              value={form.companyName}
-              onChange={e => setForm(p => ({ ...p, companyName: e.target.value }))}
-              className='w-full border border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500'
-            />
+    <div className='min-h-screen bg-dark-600 flex items-center justify-center px-4'>
+      <div className='w-full max-w-md'>
+
+        <div className='text-center mb-8'>
+          <div
+            onClick={() => navigate('/')}
+            className='inline-flex items-center gap-2 cursor-pointer mb-6'>
+            <div className='w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center'>
+              <span className='text-white font-bold'>A</span>
+            </div>
+            <span className='text-white font-bold text-2xl'>Azkard</span>
+          </div>
+          <h1 className='text-2xl font-bold text-white'>Create your account</h1>
+          <p className='text-dark-100 mt-2'>Join thousands of professionals</p>
+        </div>
+
+        <div className='bg-dark-400 border border-white/5 rounded-2xl p-8'>
+
+          {/* Role selector */}
+          <div className='grid grid-cols-2 gap-3 mb-6'>
+            {['CANDIDATE', 'EMPLOYER'].map(role => (
+              <button
+                key={role}
+                type='button'
+                onClick={() => setForm(p => ({ ...p, role }))}
+                className={'py-3 rounded-xl text-sm font-semibold transition border ' +
+                  (form.role === role
+                    ? 'bg-brand-600 border-brand-600 text-white'
+                    : 'bg-transparent border-white/10 text-dark-100 hover:border-white/20')}>
+                {role === 'CANDIDATE' ? '👤 Job Seeker' : '🏢 Employer'}
+              </button>
+            ))}
+          </div>
+
+          {error && (
+            <div className='bg-red-500/10 border border-red-500/20 text-red-400 text-sm px-4 py-3 rounded-lg mb-4'>
+              {error}
+            </div>
           )}
-          <input
-            type='email' placeholder='Email' required
-            value={form.email}
-            onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
-            className='w-full border border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500'
-          />
-          <input
-            type='password' placeholder='Password' required
-            value={form.password}
-            onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-            className='w-full border border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500'
-          />
-          <button type='submit'
-            className='w-full bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700 font-medium'>
-            Create account
-          </button>
-        </form>
-        <p className='mt-4 text-sm text-slate-500'>
-          Already have an account? <Link to='/login' className='text-teal-600 hover:underline'>Sign in</Link>
+
+          <form onSubmit={handleSubmit} className='space-y-4'>
+            {form.role === 'CANDIDATE' ? (
+              <div>
+                <label className='text-dark-100 text-sm font-medium block mb-2'>Full Name</label>
+                <input
+                  required type='text'
+                  value={form.fullName}
+                  onChange={e => setForm(p => ({ ...p, fullName: e.target.value }))}
+                  className='w-full bg-dark-500 border border-white/10 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-500 transition placeholder-dark-200'
+                  placeholder='John Doe'
+                />
+              </div>
+            ) : (
+              <div>
+                <label className='text-dark-100 text-sm font-medium block mb-2'>Company Name</label>
+                <input
+                  required type='text'
+                  value={form.companyName}
+                  onChange={e => setForm(p => ({ ...p, companyName: e.target.value }))}
+                  className='w-full bg-dark-500 border border-white/10 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-500 transition placeholder-dark-200'
+                  placeholder='Acme Inc.'
+                />
+              </div>
+            )}
+            <div>
+              <label className='text-dark-100 text-sm font-medium block mb-2'>Email</label>
+              <input
+                required type='email'
+                value={form.email}
+                onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+                className='w-full bg-dark-500 border border-white/10 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-500 transition placeholder-dark-200'
+                placeholder='you@example.com'
+              />
+            </div>
+            <div>
+              <label className='text-dark-100 text-sm font-medium block mb-2'>Password</label>
+              <input
+                required type='password'
+                value={form.password}
+                onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
+                className='w-full bg-dark-500 border border-white/10 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-500 transition placeholder-dark-200'
+                placeholder='••••••••'
+              />
+            </div>
+            <button
+              type='submit'
+              className='w-full bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-semibold transition mt-2'>
+              Create Account
+            </button>
+          </form>
+        </div>
+
+        <p className='text-center text-dark-100 text-sm mt-6'>
+          Already have an account?{' '}
+          <Link to='/login' className='text-brand-400 hover:text-brand-300 transition'>
+            Sign in
+          </Link>
         </p>
       </div>
     </div>

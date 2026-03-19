@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './store/AuthContext';
 
+import LandingPage       from './pages/LandingPage';
 import LoginPage         from './pages/LoginPage';
 import RegisterPage      from './pages/RegisterPage';
 import JobsPage          from './pages/JobsPage';
@@ -20,7 +21,7 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path='/'         element={<Navigate to='/jobs' replace />} />
+          <Route path='/'         element={<LandingPage />} />
           <Route path='/login'    element={<LoginPage />} />
           <Route path='/register' element={<RegisterPage />} />
           <Route path='/jobs'     element={<JobsPage />} />

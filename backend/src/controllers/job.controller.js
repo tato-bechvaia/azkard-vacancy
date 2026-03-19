@@ -5,11 +5,13 @@ const listJobs = async (req, res, next) => {
   try {
     const { search, location, regime, experience, page = 1, limit = 10 } = req.query;
     const where = {
-      status: 'HIRING',
-      ...(search && { title: { contains: search, mode: 'insensitive' } }),
-      ...(location && { location: { contains: location, mode: 'insensitive' } }),
-      ...(regime && { jobRegime: regime }),
-      ...(experience && { experience }),
+        status: 'HIRING',
+        ...(search && { title: { contains: search, mode: 'insensitive' } }),
+        ...(location && { location: { contains: location, mode: 'insensitive' } }),
+        ...(regime && { jobRegime: regime }),
+        ...(experience && { experience }),
+        ...(salaryMin && { salaryMin: { gte: +salaryMin } }),
+        ...(salaryMax && { salaryMax: { lte: +salaryMax } }),
     };
     const [jobs, total] = await Promise.all([
       prisma.job.findMany({
