@@ -2,22 +2,23 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../store/AuthContext';
+import Navbar from '../components/Navbar';
 
-const REGIME_LABELS = { REMOTE: 'Remote', HYBRID: 'Hybrid', FULL_TIME: 'Full Time' };
-const EXP_LABELS = { NONE: 'No experience', ONE_TO_THREE: '1-3 years', THREE_TO_FIVE: '3-5 years', FIVE_PLUS: '5+ years' };
+const REGIME_LABELS = { REMOTE: 'Remote', HYBRID: 'Hybrid', FULL_TIME: 'On-site' };
+const EXP_LABELS    = { NONE: 'No experience', ONE_TO_THREE: '1-3 years', THREE_TO_FIVE: '3-5 years', FIVE_PLUS: '5+ years' };
 
 export default function JobDetailPage() {
-  const [cvFile, setCvFile] = useState(null);  
-  const { id } = useParams();
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [job, setJob]               = useState(null);
+  const { id }    = useParams();
+  const { user }  = useAuth();
+  const navigate  = useNavigate();
+  const [job, setJob]             = useState(null);
   const [coverLetter, setCoverLetter] = useState('');
-  const [applied, setApplied]       = useState(false);
-  const [message, setMessage]       = useState('');
+  const [cvFile, setCvFile]       = useState(null);
+  const [applied, setApplied]     = useState(false);
+  const [message, setMessage]     = useState('');
 
   useEffect(() => {
-    api.get(`/jobs/${id}`).then(({ data }) => setJob(data));
+    api.get('/jobs/' + id).then(({ data }) => setJob(data)).catch(() => {});
   }, [id]);
 
   const handleApply = async () => {
@@ -26,8 +27,7 @@ export default function JobDetailPage() {
       const formData = new FormData();
       formData.append('coverLetter', coverLetter);
       if (cvFile) formData.append('cv', cvFile);
-  
-      await api.post(`/applications/job/${id}`, formData, {
+      await api.post('/applications/job/' + id, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setApplied(true);
@@ -37,94 +37,116 @@ export default function JobDetailPage() {
     }
   };
 
-  if (!job) return <div className='min-h-screen flex items-center justify-center'>Loading...</div>;
+  if (!job) return (
+    <div className='min-h-screen bg-surface-50 flex items-center justify-center'>
+      <p className='text-gray-400 text-sm'>Loading...</p>
+    </div>
+  );
 
   return (
-    <div className='min-h-screen bg-slate-50'>
-      <nav className='bg-white shadow-sm px-6 py-4 flex justify-between items-center'>
-        <h1 className='text-xl font-bold text-teal-600 cursor-pointer' onClick={() => navigate('/jobs')}>
-          Azkard Vacancy
-        </h1>
-        <button onClick={() => navigate('/jobs')} className='text-sm text-slate-600 hover:underline'>
+    <div className='min-h-screen bg-surface-50'>
+      <Navbar />
+
+      <div className='max-w-3xl mx-auto pt-20 px-4 pb-10'>
+        <button
+          onClick={() => navigate('/')}
+          className='text-sm text-gray-400 hover:text-gray-900 transition mb-6 flex items-center gap-1'>
           ← Back to jobs
         </button>
-      </nav>
 
-      <div className='max-w-3xl mx-auto py-10 px-4'>
-        <div className='bg-white rounded-2xl shadow-sm p-8'>
-          <div className='flex justify-between items-start mb-6'>
-            <div>
-              <h1 className='text-2xl font-bold text-slate-800'>{job.title}</h1>
-              <p className='text-teal-600 font-medium text-lg'>{job.employer.companyName}</p>
-              {job.employer.website && (
-                <a href={job.employer.website} target='_blank' className='text-slate-400 text-sm hover:underline'>
-                  {job.employer.website}
-                </a>
-              )}
+        <div className='bg-white border border-surface-200 rounded-2xl p-8'>
+
+          <div className='flex items-start gap-4 mb-6'>
+            <div className='w-12 h-12 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center font-display font-bold text-brand-600 text-lg flex-shrink-0'>
+              {job.employer.companyName.charAt(0)}
             </div>
-            <div className='text-right'>
-              <p className='text-xl font-bold text-slate-700'>
-                {job.salaryMin.toLocaleString()} {job.currency}
-                {job.salaryMax && ` - ${job.salaryMax.toLocaleString()}`}
+            <div className='flex-1'>
+              <h1 className='font-display font-bold text-xl text-gray-900'>{job.title}</h1>
+              <p className='text-gray-500 text-sm mt-0.5'>
+                {job.employer.companyName}
+                {job.employer.website && (
+                  <a href={job.employer.website} target='_blank' rel='noreferrer' className='text-brand-600 ml-2 hover:underline text-xs'>
+                    {job.employer.website}
+                  </a>
+                )}
               </p>
             </div>
+            <div className='text-right'>
+              <p className='font-display font-bold text-gray-900'>
+                {job.salaryMin.toLocaleString()} ₾
+                {job.salaryMax ? ' – ' + job.salaryMax.toLocaleString() : ''}
+              </p>
+              <p className='text-xs text-gray-400 mt-0.5'>{job.currency}</p>
+            </div>
           </div>
 
-          <div className='flex gap-2 flex-wrap mb-6'>
-            <span className='bg-teal-50 text-teal-700 text-sm px-3 py-1 rounded-full'>{REGIME_LABELS[job.jobRegime]}</span>
-            <span className='bg-slate-100 text-slate-600 text-sm px-3 py-1 rounded-full'>{EXP_LABELS[job.experience]}</span>
-            {job.location && <span className='bg-slate-100 text-slate-600 text-sm px-3 py-1 rounded-full'>📍 {job.location}</span>}
-            {job.jobPeriod && <span className='bg-slate-100 text-slate-600 text-sm px-3 py-1 rounded-full'>⏱ {job.jobPeriod}</span>}
-            <span className='bg-slate-100 text-slate-500 text-sm px-3 py-1 rounded-full'>👁 {job.views} views</span>
+          <div className='flex flex-wrap gap-2 mb-6'>
+            <span className='text-xs px-2.5 py-1 rounded-lg bg-brand-50 text-brand-600 border border-brand-100'>
+              {REGIME_LABELS[job.jobRegime]}
+            </span>
+            <span className='text-xs px-2.5 py-1 rounded-lg bg-gray-50 text-gray-600 border border-gray-200'>
+              {EXP_LABELS[job.experience]}
+            </span>
+            {job.location && (
+              <span className='text-xs px-2.5 py-1 rounded-lg bg-gray-50 text-gray-600 border border-gray-200'>
+                📍 {job.location}
+              </span>
+            )}
+            {job.jobPeriod && (
+              <span className='text-xs px-2.5 py-1 rounded-lg bg-gray-50 text-gray-600 border border-gray-200'>
+                ⏱ {job.jobPeriod}
+              </span>
+            )}
+            <span className='text-xs px-2.5 py-1 rounded-lg bg-gray-50 text-gray-400 border border-gray-200 ml-auto'>
+              👁 {job.views} views
+            </span>
           </div>
 
-          <div className='mb-8'>
-            <h2 className='text-lg font-semibold text-slate-800 mb-3'>Job Description</h2>
-            <p className='text-slate-600 leading-relaxed whitespace-pre-line'>{job.description}</p>
+          <div className='border-t border-surface-100 pt-6 mb-8'>
+            <h2 className='font-display font-semibold text-gray-900 mb-3'>Job Description</h2>
+            <p className='text-gray-600 text-sm leading-relaxed whitespace-pre-line'>{job.description}</p>
           </div>
 
           {user?.role === 'CANDIDATE' && !applied && (
-            <div className='border-t pt-6'>
-                <h2 className='text-lg font-semibold text-slate-800 mb-3'>Apply for this job</h2>
-                <textarea
+            <div className='border-t border-surface-100 pt-6'>
+              <h2 className='font-display font-semibold text-gray-900 mb-4'>Apply for this position</h2>
+              <textarea
                 placeholder='Cover letter (optional)...'
                 value={coverLetter}
                 onChange={e => setCoverLetter(e.target.value)}
                 rows={4}
-                className='w-full border border-slate-200 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-teal-500'
-                />
-                <div className='mb-4'>
-                <label className='block text-sm font-medium text-slate-700 mb-2'>
-                    Upload CV (PDF or Word)
-                </label>
+                className='w-full bg-surface-50 border border-surface-200 rounded-xl px-4 py-3 text-sm mb-4 focus:outline-none focus:border-brand-600 resize-none'
+              />
+              <div className='mb-4'>
+                <label className='text-sm text-gray-500 block mb-2'>Upload CV (PDF or Word)</label>
                 <input
-                    type='file'
-                    accept='.pdf,.doc,.docx'
-                    onChange={e => setCvFile(e.target.files[0])}
-                    className='w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none'
+                  type='file'
+                  accept='.pdf,.doc,.docx'
+                  onChange={e => setCvFile(e.target.files[0])}
+                  className='w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-4 file:rounded-lg file:border file:border-surface-200 file:text-sm file:bg-white file:text-gray-600 hover:file:bg-surface-50'
                 />
-                </div>
-                <button
+              </div>
+              <button
                 onClick={handleApply}
-                className='w-full bg-teal-600 text-white py-3 rounded-xl hover:bg-teal-700 font-medium text-lg'>
+                className='w-full bg-brand-600 hover:bg-brand-700 text-white py-3 rounded-xl font-medium text-sm transition'>
                 Submit Application
-                </button>
+              </button>
             </div>
-            )}
+          )}
 
           {message && (
-            <p className={`mt-4 text-center font-medium ${applied ? 'text-teal-600' : 'text-red-500'}`}>
+            <p className={'mt-4 text-center text-sm font-medium ' + (applied ? 'text-teal-600' : 'text-red-500')}>
               {message}
             </p>
           )}
 
           {!user && (
-            <div className='border-t pt-6 text-center'>
-              <p className='text-slate-500 mb-3'>You need to be logged in to apply</p>
+            <div className='border-t border-surface-100 pt-6 text-center'>
+              <p className='text-gray-400 text-sm mb-3'>Sign in to apply for this job</p>
               <button
                 onClick={() => navigate('/login')}
-                className='bg-teal-600 text-white px-8 py-3 rounded-xl hover:bg-teal-700 font-medium'>
-                Login to Apply
+                className='bg-brand-600 hover:bg-brand-700 text-white px-8 py-2.5 rounded-xl text-sm font-medium transition'>
+                Sign in to Apply
               </button>
             </div>
           )}
