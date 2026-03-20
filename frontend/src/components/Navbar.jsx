@@ -8,8 +8,8 @@ export default function Navbar() {
 
   const initials = () => {
     if (!user) return '';
-    const stored = localStorage.getItem('name') || user.email;
-    return stored.slice(0, 2).toUpperCase();
+    const name = localStorage.getItem('name') || user.email || user.role || '';
+    return name.slice(0, 2).toUpperCase();
   };
 
   return (

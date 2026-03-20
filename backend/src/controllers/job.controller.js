@@ -2,9 +2,9 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 const listJobs = async (req, res, next) => {
-  try {
-    const { search, location, regime, experience, page = 1, limit = 10 } = req.query;
-    const where = {
+    try {
+      const { search, location, regime, experience, salaryMin, salaryMax, page = 1, limit = 10 } = req.query;
+      const where = {
         status: 'HIRING',
         ...(search && { title: { contains: search, mode: 'insensitive' } }),
         ...(location && { location: { contains: location, mode: 'insensitive' } }),
@@ -12,19 +12,19 @@ const listJobs = async (req, res, next) => {
         ...(experience && { experience }),
         ...(salaryMin && { salaryMin: { gte: +salaryMin } }),
         ...(salaryMax && { salaryMax: { lte: +salaryMax } }),
-    };
-    const [jobs, total] = await Promise.all([
-      prisma.job.findMany({
-        where,
-        skip: (page - 1) * limit,
-        take: +limit,
-        include: { employer: { select: { companyName: true, logoUrl: true } } },
-        orderBy: { createdAt: 'desc' },
-      }),
-      prisma.job.count({ where }),
-    ]);
-    res.json({ jobs, total, page: +page, pages: Math.ceil(total / limit) });
-  } catch (err) { next(err); }
+      };
+      const [jobs, total] = await Promise.all([
+        prisma.job.findMany({
+          where,
+          skip: (page - 1) * limit,
+          take: +limit,
+          include: { employer: { select: { companyName: true, logoUrl: true } } },
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.job.count({ where }),
+      ]);
+      res.json({ jobs, total, page: +page, pages: Math.ceil(total / limit) });
+    } catch (err) { next(err); }
 };
 
 const getJob = async (req, res, next) => {
