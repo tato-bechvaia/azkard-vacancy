@@ -99,7 +99,11 @@ export default function ProfilePage() {
     ? (profile.fullName || profile.companyName || '').slice(0, 2).toUpperCase()
     : '';
 
-  const displayName = profile ? (profile.fullName || profile.companyName || '') : '';
+    const displayName = profile
+    ? (profile.firstName
+        ? profile.firstName + ' ' + (profile.lastName || '')
+        : profile.companyName || '')
+    : '';
 
   const navItems = user?.role === 'EMPLOYER'
     ? [
@@ -365,30 +369,28 @@ export default function ProfilePage() {
 
           {/* EMPLOYER — SETTINGS */}
           {activePanel === 'settings' && user?.role === 'EMPLOYER' && (
-            <div>
-              <p className='font-display font-semibold text-gray-900 mb-4'>Company profile</p>
-              <form onSubmit={handleUpdateProfile} className='bg-white border border-surface-200 rounded-xl p-5 space-y-4'>
-                <div className='grid grid-cols-2 gap-4'>
-                  <div>
-                    <label className='text-xs text-gray-500 block mb-1.5'>Company name</label>
-                    <input value={form.companyName || ''} onChange={e => setForm(p => ({ ...p, companyName: e.target.value }))}
-                      className='w-full h-9 bg-surface-50 border border-surface-200 rounded-lg px-3 text-sm focus:outline-none focus:border-brand-600' />
-                  </div>
-                  <div>
-                    <label className='text-xs text-gray-500 block mb-1.5'>Website</label>
-                    <input value={form.website || ''} onChange={e => setForm(p => ({ ...p, website: e.target.value }))}
-                      className='w-full h-9 bg-surface-50 border border-surface-200 rounded-lg px-3 text-sm focus:outline-none focus:border-brand-600' />
-                  </div>
+            <div className='grid grid-cols-2 gap-4'>
+                <div>
+                    <label className='text-xs text-gray-500 block mb-1.5'>სახელი</label>
+                    <input value={form.firstName || ''} onChange={e => setForm(p => ({ ...p, firstName: e.target.value }))}
+                    className='w-full h-9 bg-surface-50 border border-surface-200 rounded-lg px-3 text-sm focus:outline-none focus:border-brand-600' />
                 </div>
                 <div>
-                  <label className='text-xs text-gray-500 block mb-1.5'>Description</label>
-                  <textarea value={form.description || ''} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3}
-                    className='w-full bg-surface-50 border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-600 resize-none' />
+                    <label className='text-xs text-gray-500 block mb-1.5'>გვარი</label>
+                    <input value={form.lastName || ''} onChange={e => setForm(p => ({ ...p, lastName: e.target.value }))}
+                    className='w-full h-9 bg-surface-50 border border-surface-200 rounded-lg px-3 text-sm focus:outline-none focus:border-brand-600' />
                 </div>
-                <button type='submit' className='bg-brand-600 hover:bg-brand-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition'>
-                  Save changes
-                </button>
-              </form>
+                <div>
+                    <label className='text-xs text-gray-500 block mb-1.5'>ლოკაცია</label>
+                    <input value={form.location || ''} onChange={e => setForm(p => ({ ...p, location: e.target.value }))}
+                    className='w-full h-9 bg-surface-50 border border-surface-200 rounded-lg px-3 text-sm focus:outline-none focus:border-brand-600' />
+                </div>
+                <div>
+                    <label className='text-xs text-gray-500 block mb-1.5'>მობილური</label>
+                    <input value={form.user?.phone || ''} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
+                    className='w-full h-9 bg-surface-50 border border-surface-200 rounded-lg px-3 text-sm focus:outline-none focus:border-brand-600'
+                    placeholder='+995 555 00 00 00' />
+                </div>
             </div>
           )}
 

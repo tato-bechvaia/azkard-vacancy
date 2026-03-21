@@ -49,6 +49,7 @@ model User {
   email            String            @unique
   passwordHash     String
   role             Role
+  phone            String?
   isVerified       Boolean           @default(false)
   verifyCode       String?
   createdAt        DateTime          @default(now())
@@ -70,7 +71,8 @@ model EmployerProfile {
 model CandidateProfile {
   id           Int           @id @default(autoincrement())
   userId       Int           @unique
-  fullName     String
+  firstName    String
+  lastName     String
   headline     String?
   location     String?
   cvUrl        String?
