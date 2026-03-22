@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../store/AuthContext';
 import Navbar from '../components/Navbar';
+import CompanyAvatar from '../components/CompanyAvatar';
 
 const STATUS_STYLES = {
   PENDING:     'bg-amber-50 text-amber-700 border-amber-200',
@@ -161,6 +162,8 @@ export default function ProfilePage() {
         { key: 'cv',           label: 'ჩემი CV',         count: null },
         { key: 'settings',     label: 'პროფილი',         count: null },
       ];
+
+    //   console.log(profile.avatarUrl);
 
   return (
     <div className='min-h-screen bg-surface-50'>
@@ -522,9 +525,7 @@ export default function ProfilePage() {
               <div className='flex flex-col gap-2'>
                 {applications.map(app => (
                   <div key={app.id} className='bg-white border border-surface-200 rounded-xl p-4 flex items-center gap-4'>
-                    <div className='w-9 h-9 rounded-xl bg-surface-100 flex items-center justify-center font-display font-bold text-xs text-gray-500 flex-shrink-0'>
-                      {app.job.employer.companyName.charAt(0)}
-                    </div>
+                    <CompanyAvatar company={app.job.employer} size='sm' />
                     <div className='flex-1 min-w-0'>
                       <p
                         className='text-sm font-medium text-gray-900 cursor-pointer hover:text-brand-600 transition'

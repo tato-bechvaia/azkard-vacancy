@@ -19,11 +19,11 @@ const listJobs = async (req, res, next) => {
             skip: (page - 1) * limit,
             take: +limit,
             include: {
-              employer: { select: { companyName: true, logoUrl: true } },
+            employer: { select: { companyName: true, logoUrl: true, avatarUrl: true } },
               _count: { select: { applications: true } }
             },
             orderBy: { createdAt: 'desc' },
-        }),
+          }),
         prisma.job.count({ where }),
       ]);
       res.json({ jobs, total, page: +page, pages: Math.ceil(total / limit) });
@@ -35,8 +35,8 @@ const getJob = async (req, res, next) => {
       const job = await prisma.job.findUnique({
         where: { id: +req.params.id },
         include: {
-          employer: { select: { companyName: true, logoUrl: true, website: true } },
-          _count: { select: { applications: true } }
+            employer: { select: { companyName: true, logoUrl: true, avatarUrl: true } },
+            _count: { select: { applications: true } }
         },
       });
       if (!job) return res.status(404).json({ message: 'ვაკანსია ვერ მოიძებნა' });

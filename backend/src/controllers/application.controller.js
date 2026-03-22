@@ -41,11 +41,11 @@ const myApplications = async (req, res, next) => {
       where: { candidateProfileId: candidate.id },
       include: {
         job: {
-          select: {
-            title: true,
-            location: true,
-            employer: { select: { companyName: true } }
-          }
+            select: {
+              title: true,
+              location: true,
+              employer: { select: { companyName: true, avatarUrl: true } }
+            }
         }
       },
       orderBy: { appliedAt: 'desc' },

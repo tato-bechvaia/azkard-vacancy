@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import Navbar from '../components/Navbar';
+import CompanyAvatar from '../components/CompanyAvatar';
 
 const REGIME_LABELS   = { REMOTE: 'დისტანციური', HYBRID: 'ჰიბრიდული', FULL_TIME: 'ადგილზე' };
 const EXP_LABELS      = { NONE: 'გამოცდილება არ სჭირდება', ONE_TO_THREE: '1-3 წელი', THREE_TO_FIVE: '3-5 წელი', FIVE_PLUS: '5+ წელი' };
@@ -146,9 +147,7 @@ export default function JobsPage() {
                 onClick={() => navigate('/jobs/' + job.id)}
                 className='bg-white border border-surface-200 rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:border-gray-300 transition group'>
 
-                    <div className='w-10 h-10 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center font-display font-bold text-brand-600 flex-shrink-0'>
-                        {job.employer.companyName.charAt(0)}
-                    </div>
+                    <CompanyAvatar company={job.employer} size='md' />
 
                     <div className='flex-1 min-w-0'>
                         <div className='flex items-start justify-between gap-4'>

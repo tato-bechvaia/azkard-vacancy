@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../store/AuthContext';
 import Navbar from '../components/Navbar';
+import CompanyAvatar from '../components/CompanyAvatar';
 
 const REGIME_LABELS = { REMOTE: 'Remote', HYBRID: 'Hybrid', FULL_TIME: 'On-site' };
 const EXP_LABELS    = { NONE: 'No experience', ONE_TO_THREE: '1-3 years', THREE_TO_FIVE: '3-5 years', FIVE_PLUS: '5+ years' };
@@ -63,9 +64,7 @@ export default function JobDetailPage() {
         <div className='bg-white border border-surface-200 rounded-2xl p-8'>
 
           <div className='flex items-start gap-4 mb-6'>
-            <div className='w-12 h-12 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center font-display font-bold text-brand-600 text-lg flex-shrink-0'>
-              {job.employer.companyName.charAt(0)}
-            </div>
+            <CompanyAvatar company={job.employer} size='lg' />
             <div className='flex-1'>
               <h1 className='font-display font-bold text-xl text-gray-900'>{job.title}</h1>
               <p className='text-gray-500 text-sm mt-0.5'>

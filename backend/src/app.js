@@ -12,7 +12,14 @@ const { errorHandler }  = require('./middleware/error.middleware');
 
 const app = express();
 
-app.use(helmet());
+// app.use(helmet({
+//   contentSecurityPolicy: {
+//     directives: {
+//       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+//       'img-src': ["'self'", 'data:', 'http://localhost:5000'],
+//     },
+//   },
+// }));
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(morgan('dev'));
 app.use(express.json());
