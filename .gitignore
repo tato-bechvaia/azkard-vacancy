@@ -29,8 +29,7 @@ coverage
 .DS_Store
 
 # Upload files
-echo "backend/uploads/" 
-
+echo "backend/uploads/" >> .gitignore
 
 # Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
 .grunt
