@@ -4,17 +4,21 @@ const prisma = new PrismaClient();
 const applyToJob = async (req, res, next) => {
   try {
     const { coverLetter } = req.body;
-    const cvUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
     const candidate = await prisma.candidateProfile.findUnique({
       where: { userId: req.user.id },
     });
-    if (!candidate) return res.status(404).json({ message: 'Candidate profile not found' });
+    if (!candidate) return res.status(404).json({ message: 'კანდიდატის პროფილი ვერ მოიძებნა' });
 
     const existing = await prisma.application.findFirst({
       where: { jobId: +req.params.jobId, candidateProfileId: candidate.id },
     });
-    if (existing) return res.status(409).json({ message: 'Already applied to this job' });
+    if (existing) return res.status(409).json({ message: 'უკვე გაგზავნილი გაქვთ განაცხადი' });
+
+    let cvUrl = candidate.cvUrl || null;
+    if (req.file) {
+      cvUrl = '/uploads/' + req.file.filename;
+    }
 
     const application = await prisma.application.create({
       data: {
@@ -35,7 +39,15 @@ const myApplications = async (req, res, next) => {
     });
     const applications = await prisma.application.findMany({
       where: { candidateProfileId: candidate.id },
-      include: { job: { select: { title: true, location: true, employer: { select: { companyName: true } } } } },
+      include: {
+        job: {
+          select: {
+            title: true,
+            location: true,
+            employer: { select: { companyName: true } }
+          }
+        }
+      },
       orderBy: { appliedAt: 'desc' },
     });
     res.json(applications);
@@ -46,7 +58,11 @@ const jobApplicants = async (req, res, next) => {
   try {
     const applications = await prisma.application.findMany({
       where: { jobId: +req.params.jobId },
-      include: { candidate: { select: { fullName: true, headline: true, cvUrl: true } } },
+      include: {
+        candidate: {
+          select: { firstName: true, lastName: true, headline: true, cvUrl: true }
+        }
+      },
       orderBy: { appliedAt: 'desc' },
     });
     res.json(applications);

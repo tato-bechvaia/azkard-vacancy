@@ -15,11 +15,14 @@ const listJobs = async (req, res, next) => {
       };
       const [jobs, total] = await Promise.all([
         prisma.job.findMany({
-          where,
-          skip: (page - 1) * limit,
-          take: +limit,
-          include: { employer: { select: { companyName: true, logoUrl: true } } },
-          orderBy: { createdAt: 'desc' },
+            where,
+            skip: (page - 1) * limit,
+            take: +limit,
+            include: {
+              employer: { select: { companyName: true, logoUrl: true } },
+              _count: { select: { applications: true } }
+            },
+            orderBy: { createdAt: 'desc' },
         }),
         prisma.job.count({ where }),
       ]);
@@ -28,22 +31,24 @@ const listJobs = async (req, res, next) => {
 };
 
 const getJob = async (req, res, next) => {
-  try {
-    const job = await prisma.job.findUnique({
-      where: { id: +req.params.id },
-      include: { employer: { select: { companyName: true, logoUrl: true, website: true } } },
-    });
-    if (!job) return res.status(404).json({ message: 'Job not found' });
-
-    // increment views
-    await prisma.job.update({
-      where: { id: +req.params.id },
-      data: { views: { increment: 1 } },
-    });
-
-    res.json(job);
-  } catch (err) { next(err); }
-};
+    try {
+      const job = await prisma.job.findUnique({
+        where: { id: +req.params.id },
+        include: {
+          employer: { select: { companyName: true, logoUrl: true, website: true } },
+          _count: { select: { applications: true } }
+        },
+      });
+      if (!job) return res.status(404).json({ message: 'ვაკანსია ვერ მოიძებნა' });
+  
+      await prisma.job.update({
+        where: { id: +req.params.id },
+        data: { views: { increment: 1 } },
+      });
+  
+      res.json(job);
+    } catch (err) { next(err); }
+  };
 
 const createJob = async (req, res, next) => {
   try {
@@ -87,17 +92,19 @@ const deleteJob = async (req, res, next) => {
 };
 
 const myJobs = async (req, res, next) => {
-  try {
-    const employer = await prisma.employerProfile.findUnique({
-      where: { userId: req.user.id },
-    });
-    const jobs = await prisma.job.findMany({
-      where: { employerProfileId: employer.id },
-      include: { _count: { select: { applications: true } } },
-      orderBy: { createdAt: 'desc' },
-    });
-    res.json(jobs);
-  } catch (err) { next(err); }
+    try {
+      const employer = await prisma.employerProfile.findUnique({
+        where: { userId: req.user.id },
+      });
+      const jobs = await prisma.job.findMany({
+        where: { employerProfileId: employer.id },
+        include: {
+          _count: { select: { applications: true } }
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      res.json(jobs);
+    } catch (err) { next(err); }
 };
 
 module.exports = { listJobs, getJob, createJob, updateJob, deleteJob, myJobs };

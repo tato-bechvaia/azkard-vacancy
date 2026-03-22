@@ -14,11 +14,17 @@ export default function JobDetailPage() {
   const [job, setJob]             = useState(null);
   const [coverLetter, setCoverLetter] = useState('');
   const [cvFile, setCvFile]       = useState(null);
+  const [savedCv, setSavedCv]     = useState(null);
   const [applied, setApplied]     = useState(false);
   const [message, setMessage]     = useState('');
 
   useEffect(() => {
     api.get('/jobs/' + id).then(({ data }) => setJob(data)).catch(() => {});
+    if (user?.role === 'CANDIDATE') {
+      api.get('/profiles/me').then(({ data }) => {
+        if (data.cvUrl) setSavedCv(data.cvUrl);
+      }).catch(() => {});
+    }
   }, [id]);
 
   const handleApply = async () => {
@@ -97,9 +103,14 @@ export default function JobDetailPage() {
                 ⏱ {job.jobPeriod}
               </span>
             )}
-            <span className='text-xs px-2.5 py-1 rounded-lg bg-gray-50 text-gray-400 border border-gray-200 ml-auto'>
-              👁 {job.views} views
-            </span>
+            <div className='ml-auto flex items-center gap-3'>
+                <span className='text-xs text-gray-400'>
+                    ნახვა: {job.views}
+                </span>
+                <span className='text-xs text-gray-400'>
+                    განაცხადი: {job._count?.applications || 0}
+                </span>
+            </div>
           </div>
 
           <div className='border-t border-surface-100 pt-6 mb-8'>
@@ -108,31 +119,55 @@ export default function JobDetailPage() {
           </div>
 
           {user?.role === 'CANDIDATE' && !applied && (
-            <div className='border-t border-surface-100 pt-6'>
-              <h2 className='font-display font-semibold text-gray-900 mb-4'>Apply for this position</h2>
-              <textarea
-                placeholder='Cover letter (optional)...'
-                value={coverLetter}
-                onChange={e => setCoverLetter(e.target.value)}
-                rows={4}
-                className='w-full bg-surface-50 border border-surface-200 rounded-xl px-4 py-3 text-sm mb-4 focus:outline-none focus:border-brand-600 resize-none'
-              />
-              <div className='mb-4'>
-                <label className='text-sm text-gray-500 block mb-2'>Upload CV (PDF or Word)</label>
+        <div className='border-t border-surface-100 pt-6'>
+            <h2 className='font-display font-semibold text-gray-900 mb-4'>განაცხადის გაგზავნა</h2>
+            <textarea
+            placeholder='სამოტივაციო წერილი (არასავალდებულო)...'
+            value={coverLetter}
+            onChange={e => setCoverLetter(e.target.value)}
+            rows={4}
+            className='w-full bg-surface-50 border border-surface-200 rounded-xl px-4 py-3 text-sm mb-4 focus:outline-none focus:border-brand-600 resize-none'
+            />
+
+            {savedCv ? (
+            <div className='bg-teal-50 border border-teal-200 rounded-xl px-4 py-3 mb-4 flex items-center justify-between'>
+                <div>
+                <p className='text-sm text-teal-700 font-medium'>CV ავტომატურად დაერთვება</p>
+                <p className='text-xs text-teal-600 mt-0.5'>პროფილში შენახული CV გაიგზავნება</p>
+                </div>
+                <label className='text-xs text-teal-600 cursor-pointer hover:underline'>
                 <input
-                  type='file'
-                  accept='.pdf,.doc,.docx'
-                  onChange={e => setCvFile(e.target.files[0])}
-                  className='w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-4 file:rounded-lg file:border file:border-surface-200 file:text-sm file:bg-white file:text-gray-600 hover:file:bg-surface-50'
+                    type='file'
+                    accept='.pdf,.doc,.docx'
+                    className='hidden'
+                    onChange={e => setCvFile(e.target.files[0])}
                 />
-              </div>
-              <button
-                onClick={handleApply}
-                className='w-full bg-brand-600 hover:bg-brand-700 text-white py-3 rounded-xl font-medium text-sm transition'>
-                Submit Application
-              </button>
+                სხვა CV-ს არჩევა
+                </label>
             </div>
-          )}
+            ) : (
+            <div className='mb-4'>
+                <label className='text-sm text-gray-500 block mb-2'>CV (PDF ან Word)</label>
+                <input
+                type='file'
+                accept='.pdf,.doc,.docx'
+                onChange={e => setCvFile(e.target.files[0])}
+                className='w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-4 file:rounded-lg file:border file:border-surface-200 file:text-sm file:bg-white file:text-gray-600 hover:file:bg-surface-50'
+                />
+            </div>
+            )}
+
+            {cvFile && (
+            <p className='text-xs text-teal-600 mb-3'>✓ არჩეულია: {cvFile.name}</p>
+            )}
+
+            <button
+            onClick={handleApply}
+            className='w-full bg-brand-600 hover:bg-brand-700 text-white py-3 rounded-xl font-medium text-sm transition'>
+            განაცხადის გაგზავნა
+            </button>
+        </div>
+)}
 
           {message && (
             <p className={'mt-4 text-center text-sm font-medium ' + (applied ? 'text-teal-600' : 'text-red-500')}>

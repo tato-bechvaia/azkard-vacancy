@@ -64,6 +64,7 @@ model EmployerProfile {
   description String?
   website     String?
   logoUrl     String?
+  avatarUrl   String?
   user        User    @relation(fields: [userId], references: [id])
   jobs        Job[]
 }

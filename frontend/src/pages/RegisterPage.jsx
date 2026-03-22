@@ -9,7 +9,6 @@ const COUNTRY_CODES = [
   { code: '+44',  flag: '🇬🇧', name: 'გაერთიანებული სამეფო' },
   { code: '+49',  flag: '🇩🇪', name: 'გერმანია' },
   { code: '+33',  flag: '🇫🇷', name: 'საფრანგეთი' },
-  { code: '+7',   flag: '🇷🇺', name: 'რუსეთი' },
   { code: '+90',  flag: '🇹🇷', name: 'თურქეთი' },
   { code: '+380', flag: '🇺🇦', name: 'უკრაინა' },
   { code: '+374', flag: '🇦🇲', name: 'სომხეთი' },
@@ -24,10 +23,13 @@ export default function RegisterPage() {
     firstName: '', lastName: '', companyName: '',
     countryCode: '+995', phoneNumber: ''
   });
-  const [error, setError] = useState('');
+  const [cvFile, setCvFile]   = useState(null);
+  const [error, setError]     = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const phone = form.phoneNumber ? form.countryCode + form.phoneNumber : '';
       const { data } = await api.post('/auth/register', {
@@ -39,10 +41,25 @@ export default function RegisterPage() {
         companyName: form.companyName,
         phone,
       });
+
       login(data.token, data.role, data.displayName);
+
+      if (cvFile && form.role === 'CANDIDATE') {
+        const formData = new FormData();
+        formData.append('cv', cvFile);
+        await api.post('/profiles/cv', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': 'Bearer ' + data.token
+          }
+        });
+      }
+
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'რეგისტრაცია ვერ მოხერხდა');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -140,9 +157,7 @@ export default function RegisterPage() {
                   onChange={e => setForm(p => ({ ...p, countryCode: e.target.value }))}
                   className='h-10 bg-surface-50 border border-surface-200 rounded-lg px-2 text-sm focus:outline-none focus:border-brand-600 flex-shrink-0'>
                   {COUNTRY_CODES.map(c => (
-                    <option key={c.code} value={c.code}>
-                      {c.flag} {c.code}
-                    </option>
+                    <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
                   ))}
                 </select>
                 <input
@@ -166,19 +181,35 @@ export default function RegisterPage() {
               />
             </div>
 
+            {form.role === 'CANDIDATE' && (
+              <div>
+                <label className='text-xs text-gray-500 block mb-1.5'>
+                  CV (არასავალდებულო — PDF ან Word)
+                </label>
+                <input
+                  type='file'
+                  accept='.pdf,.doc,.docx'
+                  onChange={e => setCvFile(e.target.files[0])}
+                  className='w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-surface-200 file:text-xs file:bg-white file:text-gray-600 hover:file:bg-surface-50'
+                />
+                {cvFile && (
+                  <p className='text-xs text-teal-600 mt-1'>✓ {cvFile.name}</p>
+                )}
+              </div>
+            )}
+
             <button
               type='submit'
-              className='w-full bg-brand-600 hover:bg-brand-700 text-white py-2.5 rounded-xl text-sm font-medium transition mt-2'>
-              ანგარიშის შექმნა
+              disabled={loading}
+              className='w-full bg-brand-600 hover:bg-brand-700 disabled:bg-brand-400 text-white py-2.5 rounded-xl text-sm font-medium transition mt-2'>
+              {loading ? 'იტვირთება...' : 'ანგარიშის შექმნა'}
             </button>
           </form>
         </div>
 
         <p className='text-center text-sm text-gray-400 mt-4'>
           უკვე გაქვთ ანგარიში?{' '}
-          <Link to='/login' className='text-brand-600 hover:underline'>
-            შესვლა
-          </Link>
+          <Link to='/login' className='text-brand-600 hover:underline'>შესვლა</Link>
         </p>
       </div>
     </div>
