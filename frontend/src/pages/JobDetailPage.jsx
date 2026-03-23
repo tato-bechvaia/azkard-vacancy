@@ -117,6 +117,19 @@ export default function JobDetailPage() {
             <p className='text-gray-600 text-sm leading-relaxed whitespace-pre-line'>{job.description}</p>
           </div>
 
+          {job.employer.jobCount > 1 && (
+            <div className='border-t border-surface-100 pt-6 mb-6'>
+                <button
+                onClick={() => navigate('/companies/' + job.employer.companyName.toLowerCase().replace(/ /g, '-'))}
+                className='w-full bg-surface-50 border border-surface-200 hover:border-brand-300 rounded-xl px-4 py-3 text-sm text-gray-600 hover:text-brand-600 transition text-left flex items-center justify-between'>
+                <span>
+                    <span className='font-medium'>{job.employer.companyName}</span>-ის სხვა ვაკანსიების ნახვა
+                </span>
+                <span>→</span>
+                </button>
+            </div>
+            )}
+
           {user?.role === 'CANDIDATE' && !applied && (
         <div className='border-t border-surface-100 pt-6'>
             <h2 className='font-display font-semibold text-gray-900 mb-4'>განაცხადის გაგზავნა</h2>
