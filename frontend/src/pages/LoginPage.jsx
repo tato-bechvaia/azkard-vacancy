@@ -26,11 +26,10 @@ export default function LoginPage() {
         <div className='text-center mb-8'>
           <div
             onClick={() => navigate('/')}
-            className='inline-flex items-center gap-2 cursor-pointer mb-6'>
-            <div className='w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center text-white font-display font-bold'>
-              A
+            className='inline-flex items-center cursor-pointer mb-6'>
+            <div className='h-9 px-4 rounded-lg bg-brand-600 flex items-center justify-center text-white font-display font-bold text-lg tracking-wide'>
+              Azkard
             </div>
-            <span className='font-display font-bold text-2xl text-gray-900'>Azkard</span>
           </div>
           <h1 className='font-display font-bold text-xl text-gray-900'>მოგესალმებით</h1>
           <p className='text-sm text-gray-400 mt-1'>შედით თქვენს ანგარიშზე</p>

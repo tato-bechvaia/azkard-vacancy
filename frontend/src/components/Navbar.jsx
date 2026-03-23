@@ -10,33 +10,28 @@ export default function Navbar() {
   return (
     <nav className='fixed top-0 left-0 right-0 z-50 bg-white border-b border-surface-200 h-14 flex items-center px-6 justify-between'>
 
-      <div
+    <div
         onClick={() => navigate('/')}
         className='flex items-center gap-2 cursor-pointer'>
-        <div className='w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center text-white font-display font-bold text-sm'>
-          A
+        <div className='h-8 px-3 rounded-lg bg-brand-600 flex items-center justify-center text-white font-display font-bold text-sm tracking-wide'>
+            Azkard
         </div>
-        <span className='font-display font-bold text-lg text-gray-900'>Azkard</span>
-      </div>
+    </div>
 
-      <div className='flex items-center gap-3'>
+    <div className='flex items-center gap-3'>
         {user ? (
-          <div className='flex items-center gap-3'>
-            <span className='text-sm text-gray-500'>
-              გამარჯობა,{' '}
-              <span className='font-medium text-gray-900'>{displayName}</span>
-            </span>
+        <div className='flex items-center gap-3'>
             <button
-              onClick={() => navigate('/profile')}
-              className='text-sm bg-surface-50 border border-surface-200 hover:bg-surface-100 text-gray-700 px-4 h-8 rounded-lg transition'>
-              პროფილი
+                onClick={() => navigate('/profile')}
+                className='text-sm bg-surface-50 border border-surface-200 hover:bg-surface-100 text-gray-700 px-4 h-8 rounded-lg transition'>
+                პროფილი
             </button>
             <button
-              onClick={logout}
-              className='text-sm text-gray-400 hover:text-red-500 transition'>
-              გასვლა
+                onClick={logout}
+                className='text-sm text-gray-400 hover:text-red-500 transition'>
+                გასვლა
             </button>
-          </div>
+        </div>
         ) : (
           <>
             <button
@@ -51,7 +46,7 @@ export default function Navbar() {
             </button>
           </>
         )}
-      </div>
+    </div>
     </nav>
   );
 }
