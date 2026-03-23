@@ -15,6 +15,8 @@ const CATEGORY_LABELS = {
 
 export default function JobsPage() {
   const navigate = useNavigate();
+  const [page, setPage]   = useState(1);
+  const [pages, setPages] = useState(1);
   const [jobs, setJobs]             = useState([]);
   const [total, setTotal]           = useState(0);
   const [search, setSearch]         = useState('');
@@ -26,10 +28,14 @@ export default function JobsPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    api.get('/jobs', { params: { search, regime, experience, category, salaryMin, salaryMax } })
-      .then(({ data }) => { setJobs(data.jobs); setTotal(data.total); })
+    api.get('/jobs', { params: { search, regime, experience, category, salaryMin, salaryMax, page, limit: 10 } })
+      .then(({ data }) => {
+        setJobs(data.jobs);
+        setTotal(data.total);
+        setPages(data.pages);
+      })
       .catch(() => {});
-  }, [search, regime, experience, category, salaryMin, salaryMax]);
+  }, [search, regime, experience, category, salaryMin, salaryMax, page]);
 
   const clearFilters = () => {
     setRegime(''); setCategory(''); setSalaryMin('');
@@ -44,6 +50,8 @@ export default function JobsPage() {
     return 'bg-gray-100 text-gray-600 border-gray-200';
   };
 
+  
+
   return (
     <div className='min-h-screen bg-surface-50'>
       <Navbar />
@@ -57,7 +65,7 @@ export default function JobsPage() {
                 type='text'
                 placeholder='ვაკანსიის ან კომპანიის ძიება...'
                 value={search}
-                onChange={e => setSearch(e.target.value)}
+                onChange={e => { setSearch(e.target.value); setPage(1); }}
                 className='w-full h-12 bg-white border border-surface-200 rounded-xl pl-16 pr-4 text-sm focus:outline-none focus:border-brand-600 shadow-sm'
             />
             </div>
@@ -67,7 +75,7 @@ export default function JobsPage() {
 
             <select
                 value={category}
-                onChange={e => setCategory(e.target.value)}
+                onChange={e => { setCategory(e.target.value); setPage(1); }}
                 className='h-8 bg-surface-50 border border-surface-200 rounded-lg px-3 text-sm focus:outline-none focus:border-brand-600 text-gray-600'>
                 <option value=''>ყველა კატეგორია</option>
                 {Object.entries(CATEGORY_LABELS).map(([key, val]) => (
@@ -77,7 +85,7 @@ export default function JobsPage() {
 
             <select
                 value={regime}
-                onChange={e => setRegime(e.target.value)}
+                onChange={e => { setRegime(e.target.value); setPage(1); }}
                 className='h-8 bg-surface-50 border border-surface-200 rounded-lg px-3 text-sm focus:outline-none focus:border-brand-600 text-gray-600'>
                 <option value=''>სამუშაო რეჟიმი</option>
                 <option value='FULL_TIME'>ადგილზე</option>
@@ -87,7 +95,7 @@ export default function JobsPage() {
 
             <select
                 value={experience}
-                onChange={e => setExperience(e.target.value)}
+                onChange={e => { setExperience(e.target.value); setPage(1); }}
                 className='h-8 bg-surface-50 border border-surface-200 rounded-lg px-3 text-sm focus:outline-none focus:border-brand-600 text-gray-600'>
                 <option value=''>გამოცდილება</option>
                 <option value='NONE'>არ სჭირდება</option>
@@ -121,14 +129,14 @@ export default function JobsPage() {
                 <input
                 type='number' placeholder='მინ.'
                 value={salaryMin}
-                onChange={e => setSalaryMin(e.target.value)}
+                onChange={e => { setSalaryMin(e.target.value); setPage(1); }}
                 className='w-28 h-8 bg-surface-50 border border-surface-200 rounded-lg px-3 text-sm focus:outline-none focus:border-brand-600'
                 />
                 <span className='text-gray-300'>—</span>
                 <input
                 type='number' placeholder='მაქს.'
                 value={salaryMax}
-                onChange={e => setSalaryMax(e.target.value)}
+                onChange={e => { setSalaryMax(e.target.value); setPage(1); }}
                 className='w-28 h-8 bg-surface-50 border border-surface-200 rounded-lg px-3 text-sm focus:outline-none focus:border-brand-600'
                 />
             </div>
@@ -192,6 +200,36 @@ export default function JobsPage() {
                     </div>
                 </div>
             ))}
+
+            {pages > 1 && (
+            <div className='flex items-center justify-center gap-2 mt-8'>
+                <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className='h-9 px-4 rounded-lg border border-surface-200 text-sm text-gray-500 hover:bg-surface-100 disabled:opacity-40 disabled:cursor-not-allowed transition'>
+                ← წინა
+                </button>
+
+                {Array.from({ length: pages }, (_, i) => i + 1).map(p => (
+                <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={'h-9 w-9 rounded-lg text-sm transition border ' +
+                    (page === p
+                        ? 'bg-brand-600 text-white border-brand-600'
+                        : 'border-surface-200 text-gray-500 hover:bg-surface-100')}>
+                    {p}
+                </button>
+                ))}
+
+                <button
+                onClick={() => setPage(p => Math.min(pages, p + 1))}
+                disabled={page === pages}
+                className='h-9 px-4 rounded-lg border border-surface-200 text-sm text-gray-500 hover:bg-surface-100 disabled:opacity-40 disabled:cursor-not-allowed transition'>
+                შემდეგი →
+                </button>
+            </div>
+            )}
 
             {jobs.length === 0 && (
                 <div className='text-center py-20 text-gray-400'>

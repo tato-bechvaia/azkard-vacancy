@@ -99,6 +99,7 @@ model Job {
   employerProfileId Int
   employer          EmployerProfile   @relation(fields: [employerProfileId], references: [id])
   applications      Application[]
+  category JobCategory @default(OTHER)
 }
 
 model Application {
@@ -112,4 +113,18 @@ model Application {
   appliedAt          DateTime          @default(now())
   job                Job               @relation(fields: [jobId], references: [id])
   candidate          CandidateProfile  @relation(fields: [candidateProfileId], references: [id])
+}
+
+enum JobCategory {
+  IT
+  SALES
+  MARKETING
+  FINANCE
+  DESIGN
+  MANAGEMENT
+  LOGISTICS
+  HEALTHCARE
+  EDUCATION
+  HOSPITALITY
+  OTHER
 }
