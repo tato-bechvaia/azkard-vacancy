@@ -55,6 +55,7 @@ model User {
   createdAt        DateTime          @default(now())
   employerProfile  EmployerProfile?
   candidateProfile CandidateProfile?
+  notifications Notification[]
 }
 
 model EmployerProfile {
@@ -128,3 +129,13 @@ enum JobCategory {
   HOSPITALITY
   OTHER
 }
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+

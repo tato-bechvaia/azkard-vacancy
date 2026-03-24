@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { sendNotification } = require('../utils/notify');
 
 const applyToJob = async (req, res, next) => {
   try {
@@ -16,9 +17,7 @@ const applyToJob = async (req, res, next) => {
     if (existing) return res.status(409).json({ message: 'უკვე გაგზავნილი გაქვთ განაცხადი' });
 
     let cvUrl = candidate.cvUrl || null;
-    if (req.file) {
-      cvUrl = '/uploads/' + req.file.filename;
-    }
+    if (req.file) cvUrl = '/uploads/' + req.file.filename;
 
     const application = await prisma.application.create({
       data: {
@@ -27,7 +26,24 @@ const applyToJob = async (req, res, next) => {
         coverLetter,
         cvUrl,
       },
+      include: {
+        job: {
+          include: {
+            employer: { include: { user: true } }
+          }
+        }
+      }
     });
+
+    const candidateName = candidate.firstName + ' ' + candidate.lastName;
+    const employerUserId = application.job.employer.user.id;
+
+    await sendNotification(
+      req.app,
+      employerUserId,
+      candidateName + '-მ გამოაგზავნა განაცხადი — ' + application.job.title
+    );
+
     res.status(201).json(application);
   } catch (err) { next(err); }
 };
@@ -41,11 +57,11 @@ const myApplications = async (req, res, next) => {
       where: { candidateProfileId: candidate.id },
       include: {
         job: {
-            select: {
-              title: true,
-              location: true,
-              employer: { select: { companyName: true, avatarUrl: true } }
-            }
+          select: {
+            title: true,
+            location: true,
+            employer: { select: { companyName: true, avatarUrl: true } }
+          }
         }
       },
       orderBy: { appliedAt: 'desc' },
@@ -74,9 +90,53 @@ const updateStatus = async (req, res, next) => {
     const application = await prisma.application.update({
       where: { id: +req.params.id },
       data: { status: req.body.status },
+      include: {
+        job: true,
+        candidate: { include: { user: true } }
+      }
     });
+
+    const STATUS_GEO = {
+      PENDING:     'განხილვის მოლოდინში',
+      REVIEWING:   'განიხილება',
+      SHORTLISTED: 'შორტლისტში',
+      REJECTED:    'უარყოფილია',
+      HIRED:       'აყვანილია',
+    };
+
+    await sendNotification(
+      req.app,
+      application.candidate.user.id,
+      'თქვენი სტატუსი შეიცვალა — ' + STATUS_GEO[req.body.status] + ' (' + application.job.title + ')'
+    );
+
     res.json(application);
   } catch (err) { next(err); }
 };
 
-module.exports = { applyToJob, myApplications, jobApplicants, updateStatus };
+const viewCv = async (req, res, next) => {
+  try {
+    const application = await prisma.application.findUnique({
+      where: { id: +req.params.id },
+      include: {
+        job: true,
+        candidate: { include: { user: true } },
+        application_employer: true,
+      }
+    });
+
+    const employer = await prisma.employerProfile.findUnique({
+      where: { userId: req.user.id }
+    });
+
+    await sendNotification(
+      req.app,
+      application.candidate.user.id,
+      employer.companyName + '-მ გახსნა თქვენი CV — ' + application.job.title
+    );
+
+    res.json({ success: true });
+  } catch (err) { next(err); }
+};
+
+module.exports = { applyToJob, myApplications, jobApplicants, updateStatus, viewCv };

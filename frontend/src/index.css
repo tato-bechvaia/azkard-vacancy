@@ -15,6 +15,15 @@ body {
   margin: 0;
 }
 
+@keyframes slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: #F8F7F4; }
 ::-webkit-scrollbar-thumb { background: #6B46E0; border-radius: 3px; }

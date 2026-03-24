@@ -417,13 +417,14 @@ export default function ProfilePage() {
                       </p>
                     </div>
                     {app.cvUrl && (
-                      <a
+                        <a
                         href={'http://localhost:5000' + app.cvUrl}
                         target='_blank'
                         rel='noreferrer'
-                        className='text-xs text-brand-600 hover:underline flex-shrink-0'>
+                        className='text-xs text-brand-600 hover:underline flex-shrink-0'
+                        onClick={() => api.post('/applications/' + app.id + '/view-cv')}>
                         CV
-                      </a>
+                        </a>
                     )}
                     <select
                       value={app.status}
