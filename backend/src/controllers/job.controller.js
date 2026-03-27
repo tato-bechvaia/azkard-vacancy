@@ -3,15 +3,24 @@ const prisma = new PrismaClient();
 
 const listJobs = async (req, res, next) => {
     try {
-      const { search, location, regime, experience, salaryMin, salaryMax, page = 1, limit = 10 } = req.query;
+      const { search, location, regime, experience, category, salaryMin, salaryMax, page = 1, limit = 10 } = req.query;
+      const now = new Date();
       const where = {
         status: 'HIRING',
-        ...(search && { title: { contains: search, mode: 'insensitive' } }),
+        startDate: { lte: now },
+        endDate: { gte: now },
+        ...(search && {
+          OR: [
+            { title: { contains: search, mode: 'insensitive' } },
+            { employer: { companyName: { contains: search, mode: 'insensitive' } } },
+          ],
+        }),
         ...(location && { location: { contains: location, mode: 'insensitive' } }),
         ...(regime && { jobRegime: regime }),
         ...(experience && { experience }),
-        ...(salaryMin && { salaryMin: { gte: +salaryMin } }),
-        ...(salaryMax && { salaryMax: { lte: +salaryMax } }),
+        ...(category && { category }),
+        ...(salaryMin && { salary: { gte: +salaryMin } }),
+        ...(salaryMax && { salary: { lte: +salaryMax } }),
       };
       const [jobs, total] = await Promise.all([
         prisma.job.findMany({
@@ -68,21 +77,27 @@ const getJob = async (req, res, next) => {
 
 const createJob = async (req, res, next) => {
   try {
-    const { title, description, location, salaryMin, salaryMax, jobRegime, jobPeriod, experience, applicationMethod } = req.body;
+    const { title, description, location, salary, jobRegime, startDate, experience, applicationMethod, category } = req.body;
     const employer = await prisma.employerProfile.findUnique({
       where: { userId: req.user.id },
     });
     if (!employer) return res.status(404).json({ message: 'Employer profile not found' });
 
+    const start = startDate ? new Date(startDate) : new Date();
+    if (Number.isNaN(start.getTime())) return res.status(400).json({ message: 'Invalid startDate' });
+    const end = new Date(start);
+    end.setDate(end.getDate() + 30);
+
     const job = await prisma.job.create({
       data: {
         title, description, location,
-        salaryMin: +salaryMin,
-        salaryMax: salaryMax ? +salaryMax : null,
+        salary: +salary,
         jobRegime,
-        jobPeriod,
+        startDate: start,
+        endDate: end,
         experience: experience || 'NONE',
         applicationMethod: applicationMethod || 'CV_ONLY',
+        category: category || 'OTHER',
         employerProfileId: employer.id,
       },
     });

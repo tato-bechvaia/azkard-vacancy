@@ -41,6 +41,14 @@ export default function CompanyPage() {
     return 'bg-gray-100 text-gray-600 border-gray-200';
   };
 
+  const fmtDayMonth = (d) =>
+    new Intl.DateTimeFormat('ka-GE', { day: '2-digit', month: 'short' }).format(new Date(d));
+
+  const dateRangeLabel = (job) => {
+    if (!job?.startDate || !job?.endDate) return null;
+    return `${fmtDayMonth(job.startDate)}–${fmtDayMonth(job.endDate)}`;
+  };
+
   return (
     <div className='min-h-screen bg-surface-50'>
       <Navbar />
@@ -102,8 +110,7 @@ export default function CompanyPage() {
                   {job.title}
                 </p>
                 <p className='font-display font-semibold text-sm text-gray-900 flex-shrink-0'>
-                  {job.salaryMin.toLocaleString()} ₾
-                  {job.salaryMax ? ' – ' + job.salaryMax.toLocaleString() : ''}
+                  {job.salary.toLocaleString()} ₾
                 </p>
               </div>
               <div className='flex items-center gap-2 flex-wrap'>
@@ -116,6 +123,11 @@ export default function CompanyPage() {
                 {job.location && (
                   <span className='text-xs px-2 py-0.5 rounded border bg-gray-50 text-gray-500 border-gray-200'>
                     {job.location}
+                  </span>
+                )}
+                {dateRangeLabel(job) && (
+                  <span className='text-xs px-2 py-0.5 rounded border bg-gray-50 text-gray-500 border-gray-200'>
+                    {dateRangeLabel(job)}
                   </span>
                 )}
                 <span className='text-xs text-gray-400 ml-auto'>

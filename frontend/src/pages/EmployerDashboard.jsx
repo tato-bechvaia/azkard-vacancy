@@ -13,8 +13,8 @@ export default function EmployerDashboard() {
   const [message, setMessage]         = useState('');
   const [form, setForm] = useState({
     title: '', description: '', location: '',
-    salaryMin: '', salaryMax: '', jobRegime: 'FULL_TIME',
-    jobPeriod: '', experience: 'NONE', applicationMethod: 'CV_ONLY'
+    salary: '', startDate: '', jobRegime: 'FULL_TIME',
+    experience: 'NONE', applicationMethod: 'CV_ONLY', category: 'OTHER'
   });
 
   const fetchJobs = () => {
@@ -31,8 +31,8 @@ export default function EmployerDashboard() {
       setShowForm(false);
       setForm({
         title: '', description: '', location: '',
-        salaryMin: '', salaryMax: '', jobRegime: 'FULL_TIME',
-        jobPeriod: '', experience: 'NONE', applicationMethod: 'CV_ONLY'
+        salary: '', startDate: '', jobRegime: 'FULL_TIME',
+        experience: 'NONE', applicationMethod: 'CV_ONLY', category: 'OTHER'
       });
       fetchJobs();
     } catch (err) {
@@ -118,18 +118,13 @@ export default function EmployerDashboard() {
                 className='w-full border border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500'
               />
               <input
-                placeholder='Job Period (e.g. 1 month)' value={form.jobPeriod}
-                onChange={e => setForm(p => ({ ...p, jobPeriod: e.target.value }))}
+                type='date' value={form.startDate}
+                onChange={e => setForm(p => ({ ...p, startDate: e.target.value }))}
                 className='w-full border border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500'
               />
               <input
-                required type='number' placeholder='Min Salary (GEL)' value={form.salaryMin}
-                onChange={e => setForm(p => ({ ...p, salaryMin: e.target.value }))}
-                className='w-full border border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500'
-              />
-              <input
-                type='number' placeholder='Max Salary (GEL)' value={form.salaryMax}
-                onChange={e => setForm(p => ({ ...p, salaryMax: e.target.value }))}
+                required type='number' placeholder='Salary (GEL)' value={form.salary}
+                onChange={e => setForm(p => ({ ...p, salary: e.target.value }))}
                 className='w-full border border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500'
               />
             </div>
@@ -162,6 +157,23 @@ export default function EmployerDashboard() {
                 <option value='FORM_ONLY'>Form Only</option>
                 <option value='BOTH'>CV + Form</option>
               </select>
+
+              <select
+                value={form.category}
+                onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
+                className='w-full border border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500'>
+                <option value='IT'>IT</option>
+                <option value='SALES'>Sales</option>
+                <option value='MARKETING'>Marketing</option>
+                <option value='FINANCE'>Finance</option>
+                <option value='DESIGN'>Design</option>
+                <option value='MANAGEMENT'>Management</option>
+                <option value='LOGISTICS'>Logistics</option>
+                <option value='HEALTHCARE'>Healthcare</option>
+                <option value='EDUCATION'>Education</option>
+                <option value='HOSPITALITY'>Hospitality</option>
+                <option value='OTHER'>Other</option>
+              </select>
             </div>
 
             <button
@@ -180,8 +192,7 @@ export default function EmployerDashboard() {
                   <h3 className='text-lg font-semibold text-slate-800'>{job.title}</h3>
                   <p className='text-slate-500 text-sm'>{job.location || 'Remote'} · {job.jobRegime}</p>
                   <p className='text-slate-700 font-medium mt-1'>
-                    {job.salaryMin.toLocaleString()} GEL
-                    {job.salaryMax && ' - ' + job.salaryMax.toLocaleString() + ' GEL'}
+                    {job.salary.toLocaleString()} GEL
                   </p>
                 </div>
                 <div className='text-right'>

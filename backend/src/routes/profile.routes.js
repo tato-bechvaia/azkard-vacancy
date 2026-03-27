@@ -38,11 +38,12 @@ router.post('/cv', protect, upload.single('cv'), async (req, res, next) => {
 router.get('/company/:slug', async (req, res, next) => {
   try {
     const slug = req.params.slug.replace(/-/g, ' ');
+    const now = new Date();
     const employer = await prisma.employerProfile.findFirst({
       where: { companyName: { equals: slug, mode: 'insensitive' } },
       include: {
         jobs: {
-          where: { status: 'HIRING' },
+          where: { status: 'HIRING', startDate: { lte: now }, endDate: { gte: now } },
           include: { _count: { select: { applications: true } } },
           orderBy: { createdAt: 'desc' },
         },

@@ -87,11 +87,11 @@ model Job {
   title             String
   description       String
   location          String?
-  salaryMin         Int
-  salaryMax         Int?
+  salary            Int
   currency          String            @default("GEL")
   jobRegime         JobRegime
-  jobPeriod         String?
+  startDate         DateTime          @default(now())
+  endDate           DateTime          @default(dbgenerated("(now() + interval '30 days')"))
   experience        Experience        @default(NONE)
   applicationMethod ApplicationMethod @default(CV_ONLY)
   status            JobStatus         @default(HIRING)

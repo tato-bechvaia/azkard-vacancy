@@ -17,18 +17,26 @@ export default function Navbar() {
         </div>
       </div>
 
-      <div className='flex items-center gap-3'>
+      <div className='flex items-center gap-2'>
         {user ? (
           <>
             <NotificationPanel />
             <button
               onClick={() => navigate('/profile')}
-              className='text-sm bg-surface-50 border border-surface-200 hover:bg-surface-100 text-gray-700 px-4 h-8 rounded-lg transition'>
-              პროფილი
+              className='flex items-center gap-2 h-8 px-3 rounded-lg hover:bg-surface-100 transition group'>
+              <div className='w-6 h-6 rounded-full bg-brand-600 flex items-center justify-center flex-shrink-0'>
+                <svg width='12' height='12' viewBox='0 0 16 16' fill='none' stroke='white' strokeWidth='1.5'>
+                  <circle cx='8' cy='5' r='3'/>
+                  <path d='M2 14c0-4 2.5-6 6-6s6 2 6 6'/>
+                </svg>
+              </div>
+              <span className='text-sm text-gray-700 group-hover:text-gray-900 transition'>
+                {localStorage.getItem('displayName') || 'პროფილი'}
+              </span>
             </button>
             <button
               onClick={logout}
-              className='text-sm text-gray-400 hover:text-red-500 transition'>
+              className='h-8 px-3 rounded-lg text-sm text-gray-400 hover:text-red-500 hover:bg-red-50 transition'>
               გასვლა
             </button>
           </>
@@ -36,12 +44,12 @@ export default function Navbar() {
           <>
             <button
               onClick={() => navigate('/login')}
-              className='text-sm text-gray-500 hover:text-gray-900 transition'>
+              className='h-8 px-4 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-surface-100 transition'>
               შესვლა
             </button>
             <button
               onClick={() => navigate('/register')}
-              className='text-sm bg-brand-600 hover:bg-brand-700 text-white px-4 h-8 rounded-lg transition font-medium'>
+              className='h-8 px-4 rounded-lg text-sm bg-brand-600 hover:bg-brand-700 text-white transition font-medium'>
               რეგისტრაცია
             </button>
           </>

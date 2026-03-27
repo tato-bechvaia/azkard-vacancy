@@ -50,6 +50,14 @@ export default function JobDetailPage() {
     </div>
   );
 
+  const fmtDayMonth = (d) =>
+    new Intl.DateTimeFormat('ka-GE', { day: '2-digit', month: 'short' }).format(new Date(d));
+
+  const dateRangeLabel = (j) => {
+    if (!j?.startDate || !j?.endDate) return null;
+    return `${fmtDayMonth(j.startDate)}–${fmtDayMonth(j.endDate)}`;
+  };
+
   return (
     <div className='min-h-screen bg-surface-50'>
       <Navbar />
@@ -78,8 +86,7 @@ export default function JobDetailPage() {
             </div>
             <div className='text-right'>
               <p className='font-display font-bold text-gray-900'>
-                {job.salaryMin.toLocaleString()} ₾
-                {job.salaryMax ? ' – ' + job.salaryMax.toLocaleString() : ''}
+                {job.salary.toLocaleString()} ₾
               </p>
               <p className='text-xs text-gray-400 mt-0.5'>{job.currency}</p>
             </div>
@@ -94,12 +101,12 @@ export default function JobDetailPage() {
             </span>
             {job.location && (
               <span className='text-xs px-2.5 py-1 rounded-lg bg-gray-50 text-gray-600 border border-gray-200'>
-                📍 {job.location}
+                {job.location}
               </span>
             )}
-            {job.jobPeriod && (
+            {dateRangeLabel(job) && (
               <span className='text-xs px-2.5 py-1 rounded-lg bg-gray-50 text-gray-600 border border-gray-200'>
-                ⏱ {job.jobPeriod}
+                {dateRangeLabel(job)}
               </span>
             )}
             <div className='ml-auto flex items-center gap-3'>

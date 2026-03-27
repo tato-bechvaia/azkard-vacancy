@@ -36,8 +36,8 @@ export default function ProfilePage() {
   const [showJobForm, setShowJobForm]   = useState(false);
   const [jobForm, setJobForm]           = useState({
     title: '', description: '', location: '',
-    salaryMin: '', salaryMax: '', jobRegime: 'FULL_TIME',
-    jobPeriod: '', experience: 'NONE', applicationMethod: 'CV_ONLY',
+    salary: '', startDate: '', jobRegime: 'FULL_TIME',
+    experience: 'NONE', applicationMethod: 'CV_ONLY',
     category: 'OTHER'
   });
 
@@ -78,8 +78,8 @@ export default function ProfilePage() {
       setJobs(data);
       setJobForm({
         title: '', description: '', location: '',
-        salaryMin: '', salaryMax: '', jobRegime: 'FULL_TIME',
-        jobPeriod: '', experience: 'NONE', applicationMethod: 'CV_ONLY',
+        salary: '', startDate: '', jobRegime: 'FULL_TIME',
+        experience: 'NONE', applicationMethod: 'CV_ONLY',
         category: 'OTHER'
       });
     } catch (err) {
@@ -290,14 +290,11 @@ export default function ProfilePage() {
                     <input placeholder='ლოკაცია' value={jobForm.location}
                       onChange={e => setJobForm(p => ({ ...p, location: e.target.value }))}
                       className='h-9 bg-surface-50 border border-surface-200 rounded-lg px-3 text-sm focus:outline-none focus:border-brand-600' />
-                    <input placeholder='პერიოდი (მაგ: 1 თვე)' value={jobForm.jobPeriod}
-                      onChange={e => setJobForm(p => ({ ...p, jobPeriod: e.target.value }))}
+                    <input type='date' value={jobForm.startDate}
+                      onChange={e => setJobForm(p => ({ ...p, startDate: e.target.value }))}
                       className='h-9 bg-surface-50 border border-surface-200 rounded-lg px-3 text-sm focus:outline-none focus:border-brand-600' />
-                    <input required type='number' placeholder='მინ. ხელფასი (GEL)' value={jobForm.salaryMin}
-                      onChange={e => setJobForm(p => ({ ...p, salaryMin: e.target.value }))}
-                      className='h-9 bg-surface-50 border border-surface-200 rounded-lg px-3 text-sm focus:outline-none focus:border-brand-600' />
-                    <input type='number' placeholder='მაქს. ხელფასი (GEL)' value={jobForm.salaryMax}
-                      onChange={e => setJobForm(p => ({ ...p, salaryMax: e.target.value }))}
+                    <input required type='number' placeholder='ხელფასი (GEL)' value={jobForm.salary}
+                      onChange={e => setJobForm(p => ({ ...p, salary: e.target.value }))}
                       className='h-9 bg-surface-50 border border-surface-200 rounded-lg px-3 text-sm focus:outline-none focus:border-brand-600' />
                   </div>
                   <div className='grid grid-cols-2 gap-3'>
@@ -347,7 +344,7 @@ export default function ProfilePage() {
                     <div className='flex-1 min-w-0'>
                       <p className='font-display font-semibold text-sm text-gray-900'>{job.title}</p>
                       <p className='text-xs text-gray-400 mt-0.5'>
-                        {job.location || 'დისტანციური'} · {job.salaryMin.toLocaleString()} ₾
+                        {job.location || 'დისტანციური'} · {job.salary.toLocaleString()} ₾
                       </p>
                     </div>
                     <div className='text-right flex-shrink-0'>
