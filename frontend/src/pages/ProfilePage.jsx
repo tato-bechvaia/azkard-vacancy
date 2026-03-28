@@ -116,9 +116,7 @@ export default function ProfilePage() {
     const formData = new FormData();
     formData.append('avatar', file);
     try {
-      const { data } = await api.post('/profiles/avatar', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const { data } = await api.post('/profiles/avatar', formData);
       setProfile(p => ({ ...p, avatarUrl: data.avatarUrl }));
       setMessage('ფოტო განახლდა!');
     } catch (err) {
@@ -342,9 +340,12 @@ export default function ProfilePage() {
                 {jobs.map(job => (
                   <div key={job.id} className='bg-white border border-surface-200 rounded-xl p-4 flex items-center gap-4'>
                     <div className='flex-1 min-w-0'>
-                      <p className='font-display font-semibold text-sm text-gray-900'>{job.title}</p>
+                      <div className='flex items-center gap-2 flex-wrap'>
+                        <p className='font-display font-semibold text-sm text-gray-900'>{job.title}</p>
+                        <span className='text-sm font-semibold text-gray-800 ml-1'>{job.salary.toLocaleString()} ₾</span>
+                      </div>
                       <p className='text-xs text-gray-400 mt-0.5'>
-                        {job.location || 'დისტანციური'} · {job.salary.toLocaleString()} ₾
+                        {job.location || 'დისტანციური'}
                       </p>
                     </div>
                     <div className='text-right flex-shrink-0'>

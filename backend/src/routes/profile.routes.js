@@ -2,8 +2,7 @@ const router   = require('express').Router();
 const { getMyProfile, updateMyProfile } = require('../controllers/profile.controller');
 const { protect } = require('../middleware/auth.middleware');
 const upload   = require('../middleware/upload.middleware');
-const { PrismaClient } = require('@prisma/client');
-const prisma   = new PrismaClient();
+const prisma = require('../prisma');
 
 router.get('/me',  protect, getMyProfile);
 router.put('/me',  protect, updateMyProfile);

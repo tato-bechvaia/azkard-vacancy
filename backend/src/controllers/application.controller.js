@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../prisma');
 const { sendNotification } = require('../utils/notify');
 
 const applyToJob = async (req, res, next) => {

@@ -124,7 +124,7 @@ export default function JobsPage() {
               </svg>
               <input
                 type='text'
-                placeholder='ქალაქი ან დისტანციური'
+                placeholder='ქალაქი'
                 value={location}
                 onChange={e => setLocation(e.target.value)}
                 className='flex-1 h-12 text-sm text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent'
@@ -282,9 +282,12 @@ export default function JobsPage() {
                   <div className='flex-1 min-w-0'>
                     <div className='flex items-start justify-between gap-4'>
                       <div className='flex-1 min-w-0'>
-                        <h3 className='font-semibold text-gray-900 text-sm group-hover:text-brand-600 transition mb-1'>
-                          {job.title}
-                        </h3>
+                        <div className='flex items-center gap-2 mb-1 flex-wrap'>
+                          <h3 className='font-semibold text-gray-900 text-sm group-hover:text-brand-600 transition'>
+                            {job.title}
+                          </h3>
+                          <span className='text-sm font-semibold text-gray-800 ml-1'>{job.salary.toLocaleString()} ₾</span>
+                        </div>
                         <div className='flex items-center gap-3 text-xs text-gray-500 flex-wrap'>
                           <span
                             onClick={e => { e.stopPropagation(); navigate('/companies/' + job.employer.companyName.toLowerCase().replace(/ /g, '-')); }}
@@ -302,13 +305,6 @@ export default function JobsPage() {
                               </span>
                             </>
                           )}
-                          <span className='text-gray-300'>·</span>
-                          <span className='flex items-center gap-1'>
-                            <svg width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-                              <rect x='2' y='7' width='20' height='14' rx='2'/><path d='M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z'/>
-                            </svg>
-                            {job.salary.toLocaleString()} ₾
-                          </span>
                           {dateRangeLabel(job) && (
                             <>
                               <span className='text-gray-300'>·</span>
