@@ -18,8 +18,12 @@ const listJobs = async (req, res, next) => {
         ...(regime && { jobRegime: regime }),
         ...(experience && { experience }),
         ...(category && { category }),
-        ...(salaryMin && { salary: { gte: +salaryMin } }),
-        ...(salaryMax && { salary: { lte: +salaryMax } }),
+        ...((salaryMin || salaryMax) && {
+          salary: {
+            ...(salaryMin && { gte: +salaryMin }),
+            ...(salaryMax && { lte: +salaryMax }),
+          },
+        }),
       };
       const [jobs, total] = await Promise.all([
         prisma.job.findMany({
