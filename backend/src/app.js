@@ -10,20 +10,28 @@ const applicationRoutes  = require('./routes/application.routes');
 const profileRoutes      = require('./routes/profile.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const { errorHandler }   = require('./middleware/error.middleware');
+const { expandAssetUrlsInJson, defaultBase } = require('./utils/publicUrl');
 
 const app = express();
 
+const publicOrigin = defaultBase();
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      'img-src': ["'self'", 'data:', 'http://localhost:5000'],
+      'img-src': ["'self'", 'data:', publicOrigin],
     },
   },
 }));
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(morgan('dev'));
 app.use(express.json());
+
+app.use((req, res, next) => {
+  const send = res.json.bind(res);
+  res.json = (body) => send(expandAssetUrlsInJson(body));
+  next();
+});
 app.use('/uploads', (req, res, next) => {
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   next();

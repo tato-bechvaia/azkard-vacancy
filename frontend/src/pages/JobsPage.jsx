@@ -39,12 +39,18 @@ export default function JobsPage() {
   const observerRef = useRef(null);
   const loadingRef  = useRef(false);
 
-  const fmtDayMonth = (d) =>
-    new Intl.DateTimeFormat('ka-GE', { day: '2-digit', month: 'short' }).format(new Date(d));
+  const fmtDayMonth = (d) => {
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return null;
+    return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long' }).format(date);
+  };
 
   const dateRangeLabel = (job) => {
     if (!job?.startDate || !job?.endDate) return null;
-    return `${fmtDayMonth(job.startDate)}–${fmtDayMonth(job.endDate)}`;
+    const start = fmtDayMonth(job.startDate);
+    const end = fmtDayMonth(job.endDate);
+    if (!start || !end) return null;
+    return `${start} – ${end}`;
   };
 
   // Reset jobs and fetch page 1 when any filter changes

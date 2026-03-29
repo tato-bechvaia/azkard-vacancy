@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import { API_ORIGIN } from '../utils/assetUrl';
 
 const SocketContext = createContext(null);
 
@@ -16,7 +17,7 @@ export function SocketProvider({ children }) {
 
     const token = localStorage.getItem('token');
 
-    socketRef.current = io('http://localhost:5000', {
+    socketRef.current = io(API_ORIGIN, {
       withCredentials: true,
     });
 
@@ -41,7 +42,7 @@ export function SocketProvider({ children }) {
 
   const fetchNotifications = async (token) => {
     try {
-      const res = await fetch('http://localhost:5000/api/notifications', {
+      const res = await fetch(`${API_ORIGIN}/api/notifications`, {
         headers: { Authorization: 'Bearer ' + token }
       });
       const data = await res.json();
@@ -52,7 +53,7 @@ export function SocketProvider({ children }) {
 
   const markAllRead = async () => {
     const token = localStorage.getItem('token');
-    await fetch('http://localhost:5000/api/notifications/read-all', {
+    await fetch(`${API_ORIGIN}/api/notifications/read-all`, {
       method: 'PUT',
       headers: { Authorization: 'Bearer ' + token }
     });
@@ -62,7 +63,7 @@ export function SocketProvider({ children }) {
 
   const deleteNotification = async (id) => {
     const token = localStorage.getItem('token');
-    await fetch('http://localhost:5000/api/notifications/' + id, {
+    await fetch(`${API_ORIGIN}/api/notifications/` + id, {
       method: 'DELETE',
       headers: { Authorization: 'Bearer ' + token }
     });
@@ -72,7 +73,7 @@ export function SocketProvider({ children }) {
 
   const clearAll = async () => {
     const token = localStorage.getItem('token');
-    await fetch('http://localhost:5000/api/notifications', {
+    await fetch(`${API_ORIGIN}/api/notifications`, {
       method: 'DELETE',
       headers: { Authorization: 'Bearer ' + token }
     });

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { assetUrl } from '../utils/assetUrl';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import Navbar from '../components/Navbar';
@@ -11,12 +12,17 @@ export default function CompanyPage() {
   const navigate  = useNavigate();
   const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [headerAvatarError, setHeaderAvatarError] = useState(false);
 
   useEffect(() => {
     api.get('/profiles/company/' + slug)
       .then(({ data }) => { setCompany(data); setLoading(false); })
       .catch(() => { setLoading(false); });
   }, [slug]);
+
+  useEffect(() => {
+    setHeaderAvatarError(false);
+  }, [company?.avatarUrl]);
 
   if (loading) return (
     <div className='min-h-screen bg-surface-50 flex items-center justify-center'>
@@ -41,8 +47,11 @@ export default function CompanyPage() {
     return 'bg-gray-100 text-gray-600 border-gray-200';
   };
 
-  const fmtDayMonth = (d) =>
-    new Intl.DateTimeFormat('ka-GE', { day: '2-digit', month: 'short' }).format(new Date(d));
+  const fmtDayMonth = (d) => {
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return '';
+    return new Intl.DateTimeFormat('ka-GE', { day: '2-digit', month: 'short' }).format(date);
+  };
 
   const dateRangeLabel = (job) => {
     if (!job?.startDate || !job?.endDate) return null;
@@ -63,10 +72,11 @@ export default function CompanyPage() {
         {/* Company header */}
         <div className='bg-white border border-surface-200 rounded-2xl p-6 mb-4'>
           <div className='flex items-center gap-4 mb-4'>
-            {company.avatarUrl ? (
+            {company.avatarUrl && !headerAvatarError ? (
               <img
-                src={'http://localhost:5000' + company.avatarUrl}
+                src={assetUrl(company.avatarUrl)}
                 alt={company.companyName}
+                onError={() => setHeaderAvatarError(true)}
                 className='w-16 h-16 rounded-xl object-cover border border-surface-200'
               />
             ) : (

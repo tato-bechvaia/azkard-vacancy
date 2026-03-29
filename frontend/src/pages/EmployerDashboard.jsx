@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../store/AuthContext';
+import { assetUrl } from '../utils/assetUrl';
 
 export default function EmployerDashboard() {
   const { logout } = useAuth();
@@ -268,7 +269,7 @@ export default function EmployerDashboard() {
                         )}
                         {app.cvUrl && (
                           <a
-                            href={'http://localhost:5000' + app.cvUrl}
+                            href={assetUrl(app.cvUrl)}
                             target='_blank'
                             rel='noreferrer'
                             className='inline-block mt-2 text-teal-600 text-sm hover:underline'>

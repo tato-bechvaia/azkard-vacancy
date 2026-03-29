@@ -50,12 +50,18 @@ export default function JobDetailPage() {
     </div>
   );
 
-  const fmtDayMonth = (d) =>
-    new Intl.DateTimeFormat('ka-GE', { day: '2-digit', month: 'short' }).format(new Date(d));
+  const fmtDayMonth = (d) => {
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return null;
+    return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long' }).format(date);
+  };
 
   const dateRangeLabel = (j) => {
     if (!j?.startDate || !j?.endDate) return null;
-    return `${fmtDayMonth(j.startDate)}–${fmtDayMonth(j.endDate)}`;
+    const start = fmtDayMonth(j.startDate);
+    const end = fmtDayMonth(j.endDate);
+    if (!start || !end) return null;
+    return `${start}–${end}`;
   };
 
   return (

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { assetUrl } from '../utils/assetUrl';
 import { useAuth } from '../store/AuthContext';
 import Navbar from '../components/Navbar';
 import CompanyAvatar from '../components/CompanyAvatar';
@@ -31,6 +32,7 @@ export default function ProfilePage() {
   const [applicants, setApplicants]     = useState([]);
   const [selectedJob, setSelectedJob]   = useState(null);
   const [profile, setProfile]           = useState(null);
+  const [avatarLoadError, setAvatarLoadError] = useState(false);
   const [form, setForm]                 = useState({});
   const [message, setMessage]           = useState('');
   const [showJobForm, setShowJobForm]   = useState(false);
@@ -215,10 +217,11 @@ export default function ProfilePage() {
         {/*Sidebar 1*/}
         <div className='flex flex-col items-center text-center mb-4 pb-4 border-b border-surface-100'>
         <div className='relative mb-2'>
-            {profile?.avatarUrl ? (
+            {profile?.avatarUrl && !avatarLoadError ? (
             <img
-                src={'http://localhost:5000' + profile.avatarUrl}
+                src={assetUrl(profile.avatarUrl)}
                 alt='avatar'
+                onError={() => setAvatarLoadError(true)}
                 className='w-14 h-14 rounded-full object-cover border border-surface-200'
             />
             ) : (
@@ -416,7 +419,7 @@ export default function ProfilePage() {
                     </div>
                     {app.cvUrl && (
                         <a
-                        href={'http://localhost:5000' + app.cvUrl}
+                        href={assetUrl(app.cvUrl)}
                         target='_blank'
                         rel='noreferrer'
                         className='text-xs text-brand-600 hover:underline flex-shrink-0'
@@ -566,7 +569,7 @@ export default function ProfilePage() {
           <p className='text-xs text-gray-400 mt-0.5'>ატვირთულია</p>
         </div>
         <a
-          href={'http://localhost:5000' + profile.cvUrl}
+          href={assetUrl(profile.cvUrl)}
           target='_blank'
           rel='noreferrer'
           className='text-sm text-brand-600 hover:underline'>
