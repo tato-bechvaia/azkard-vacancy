@@ -18,7 +18,7 @@ export default function CompanyPage() {
     api.get('/profiles/company/' + slug)
       .then(({ data }) => { setCompany(data); setLoading(false); })
       .catch(() => { setLoading(false); });
-  }, [slug]);
+  }, [slug]); 
 
   useEffect(() => {
     setHeaderAvatarError(false);
@@ -33,7 +33,7 @@ export default function CompanyPage() {
   if (!company) return (
     <div className='min-h-screen bg-surface-50 flex items-center justify-center'>
       <div className='text-center'>
-        <p className='font-display font-bold text-xl text-gray-900 mb-2'>კომპანია ვერ მოიძებნა</p>
+        <p className='font-display font-semibold text-xl text-gray-900 mb-2'>კომპანია ვერ მოიძებნა</p>
         <button onClick={() => navigate('/')} className='text-brand-600 text-sm hover:underline'>
           უკან
         </button>
@@ -80,12 +80,12 @@ export default function CompanyPage() {
                 className='w-16 h-16 rounded-xl object-cover border border-surface-200'
               />
             ) : (
-              <div className='w-16 h-16 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center font-display font-bold text-brand-600 text-2xl'>
+              <div className='w-16 h-16 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center font-display font-semibold text-brand-600 text-2xl'>
                 {company.companyName.charAt(0)}
               </div>
             )}
             <div>
-              <h1 className='font-display font-bold text-xl text-gray-900'>{company.companyName}</h1>
+              <h1 className='font-display font-semibold text-xl text-gray-900'>{company.companyName}</h1>
               {company.website && (
                 <a
                   href={company.website}
@@ -114,7 +114,7 @@ export default function CompanyPage() {
             <div
               key={job.id}
               onClick={() => navigate('/jobs/' + job.id)}
-              className='bg-white border border-surface-200 rounded-xl p-4 cursor-pointer hover:border-gray-300 transition group'>
+              className='bg-white border border-surface-200 rounded-xl p-4 cursor-pointer hover:border-gray-300 transition-colors duration-150 group'>
               <div className='flex items-start justify-between gap-4 mb-2'>
                 <p className='font-display font-semibold text-sm text-gray-900 group-hover:text-brand-600 transition'>
                   {job.title}

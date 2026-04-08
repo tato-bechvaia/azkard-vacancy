@@ -23,20 +23,20 @@ export default function Navbar() {
             <NotificationPanel />
             <button
               onClick={() => navigate('/profile')}
-              className='flex items-center gap-2 h-8 px-3 rounded-lg hover:bg-surface-100 transition group'>
+              className='flex items-center gap-2 h-8 px-3 rounded-lg hover:bg-surface-100 transition-colors duration-150 group'>
               <div className='w-6 h-6 rounded-full bg-brand-600 flex items-center justify-center flex-shrink-0'>
                 <svg width='12' height='12' viewBox='0 0 16 16' fill='none' stroke='white' strokeWidth='1.5'>
                   <circle cx='8' cy='5' r='3'/>
                   <path d='M2 14c0-4 2.5-6 6-6s6 2 6 6'/>
                 </svg>
               </div>
-              <span className='text-sm text-gray-700 group-hover:text-gray-900 transition'>
+              <span className='text-sm text-gray-700 group-hover:text-gray-900 transition-colors duration-150'>
                 {localStorage.getItem('displayName') || 'პროფილი'}
               </span>
             </button>
             <button
               onClick={logout}
-              className='h-8 px-3 rounded-lg text-sm text-gray-400 hover:text-red-500 hover:bg-red-50 transition'>
+              className='h-8 px-3 rounded-lg text-sm text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors duration-150'>
               გასვლა
             </button>
           </>
@@ -44,12 +44,12 @@ export default function Navbar() {
           <>
             <button
               onClick={() => navigate('/login')}
-              className='h-8 px-4 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-surface-100 transition'>
+              className='h-8 px-4 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-surface-100 transition-colors duration-150'>
               შესვლა
             </button>
             <button
               onClick={() => navigate('/register')}
-              className='h-8 px-4 rounded-lg text-sm bg-brand-600 hover:bg-brand-700 text-white transition font-medium'>
+              className='h-8 px-4 rounded-lg text-sm bg-brand-600 hover:bg-brand-700 text-white transition-colors duration-150 font-medium'>
               რეგისტრაცია
             </button>
           </>
