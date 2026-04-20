@@ -68,11 +68,11 @@ export default function EmployerDashboard() {
   return (
     <div className='min-h-screen bg-slate-50'>
       <nav className='bg-white shadow-sm px-6 py-4 flex justify-between items-center'>
-        <h1
-          className='text-xl font-bold text-teal-600 cursor-pointer'
-          onClick={() => navigate('/jobs')}>
-          Azkard Vacancy
-        </h1>
+        <div onClick={() => navigate('/jobs')} className='cursor-pointer inline-block'>
+          <div className='h-9 px-4 rounded-lg bg-brand-600 inline-flex items-center text-white font-display font-bold text-lg tracking-wide'>
+            Azkard
+          </div>
+        </div>
         <div className='flex gap-4 items-center'>
           <span className='text-sm text-slate-500'>Employer Dashboard</span>
           <button onClick={logout} className='text-sm text-red-500 hover:underline'>

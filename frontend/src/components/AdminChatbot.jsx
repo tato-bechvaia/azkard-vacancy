@@ -1,6 +1,43 @@
 import { useState, useRef, useEffect } from 'react';
 import api from '../api/axios';
 
+// Minimal markdown → React renderer (handles links, bold, newlines)
+function renderMarkdown(text) {
+  // Split by markdown links [label](url)
+  const linkRe = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
+  const parts = [];
+  let last = 0, match;
+
+  while ((match = linkRe.exec(text)) !== null) {
+    if (match.index > last) parts.push({ type: 'text', value: text.slice(last, match.index) });
+    parts.push({ type: 'link', label: match[1], href: match[2] });
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) parts.push({ type: 'text', value: text.slice(last) });
+
+  return parts.map((p, i) => {
+    if (p.type === 'link') {
+      return (
+        <a key={i} href={p.href} target='_blank' rel='noreferrer'
+           className='text-brand-400 underline underline-offset-2 hover:text-brand-300 transition-colors'>
+          {p.label}
+        </a>
+      );
+    }
+    // Render plain text: bold (**text**) + line breaks
+    return (
+      <span key={i}>
+        {p.value.split(/(\*\*[^*]+\*\*|\n)/g).map((seg, j) => {
+          if (seg === '\n') return <br key={j} />;
+          if (seg.startsWith('**') && seg.endsWith('**'))
+            return <strong key={j}>{seg.slice(2, -2)}</strong>;
+          return seg;
+        })}
+      </span>
+    );
+  });
+}
+
 export default function AdminChatbot() {
   const [open, setOpen]       = useState(false);
   const [input, setInput]     = useState('');
@@ -72,11 +109,11 @@ export default function AdminChatbot() {
           <div className='flex-1 overflow-y-auto px-4 py-4 space-y-3 scrollbar-thin'>
             {history.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[82%] px-3 py-2 rounded-xl text-sm leading-relaxed whitespace-pre-wrap
+                <div className={`max-w-[82%] px-3 py-2 rounded-xl text-sm leading-relaxed
                   ${m.role === 'user'
-                    ? 'bg-brand-600 text-white rounded-br-sm'
+                    ? 'bg-brand-600 text-white rounded-br-sm whitespace-pre-wrap'
                     : 'bg-gray-800 text-gray-200 rounded-bl-sm'}`}>
-                  {m.content}
+                  {m.role === 'user' ? m.content : renderMarkdown(m.content)}
                 </div>
               </div>
             ))}

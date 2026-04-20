@@ -11,16 +11,10 @@ export default function Navbar() {
 
       <div
         onClick={() => navigate('/')}
-        className='inline-flex items-center gap-2 cursor-pointer group'>
-        <div className='h-7 w-7 rounded-lg bg-brand-600 flex items-center justify-center flex-shrink-0'>
-          <svg width='14' height='14' viewBox='0 0 20 20' fill='none'>
-            <path d='M4 15L10 5L16 15' stroke='white' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/>
-            <path d='M6.5 11H13.5' stroke='white' strokeWidth='2' strokeLinecap='round'/>
-          </svg>
-        </div>
-        <span className='font-display font-semibold text-[14px] text-gray-900 tracking-tight group-hover:text-brand-600 transition-colors duration-150'>
+        className='cursor-pointer inline-block'>
+        <div className='h-8 px-3.5 rounded-lg bg-brand-600 inline-flex items-center text-white font-display font-bold text-[15px] tracking-wide'>
           Azkard
-        </span>
+        </div>
       </div>
 
       <div className='flex items-center gap-1.5'>

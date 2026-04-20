@@ -3,40 +3,79 @@ const prisma = require('../prisma');
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const SYSTEM_PROMPT = `You are a helpful assistant for the Azkard job platform — a Georgian job marketplace connecting employers and candidates.
+const SYSTEM_PROMPT = `You are a helpful assistant for the Azkard job platform — a Georgian job marketplace.
 
-You can ONLY answer questions about:
-- Jobs and vacancies listed on Azkard
-- Employers and companies on the platform
-- How to use Azkard (applying to jobs, posting vacancies, profiles, etc.)
-- General job-search advice related to the platform
-- Application statuses, CV submission, company boxes
+You have access to the LIVE list of active jobs and companies on the platform (injected below each message as [PLATFORM DATA]).
 
-If a user asks about ANYTHING else (cooking, weather, general knowledge, coding unrelated to the platform, etc.), politely decline and say you can only help with Azkard platform topics.
+Your capabilities:
+- Suggest specific jobs or companies from the platform data that match what the user is looking for
+- When suggesting jobs, ALWAYS include a clickable link using this markdown format: [Job Title](URL)
+- When suggesting companies, link to them if a URL is provided
+- Answer questions about how the platform works
+- Help with filtering jobs by salary, category, location, regime (remote/hybrid/full-time), etc.
 
-Keep answers concise and helpful. Respond in the same language the user writes in (Georgian or English).`;
+Rules:
+- Only answer questions about Azkard and job-related topics. Politely refuse anything off-topic.
+- When the user asks for jobs matching criteria (salary, category, location, etc.), scan the platform data and suggest the best matches.
+- If no jobs match, say so honestly and suggest broadening the search.
+- Respond in the same language the user writes in (Georgian or English).
+- Keep answers concise. When listing jobs, show max 5 at a time unless asked for more.`;
+
+async function buildPlatformContext() {
+  const jobs = await prisma.job.findMany({
+    where: { status: 'HIRING' },
+    include: { employer: { select: { companyName: true, id: true } } },
+    orderBy: { createdAt: 'desc' },
+    take: 80,
+  });
+
+  const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+
+  const jobLines = jobs.map(j => {
+    const salary = j.salaryMax
+      ? `${j.salaryMin}–${j.salaryMax} ${j.currency}`
+      : `${j.salaryMin}+ ${j.currency}`;
+    const location = j.location || 'not specified';
+    const regime   = j.jobRegime;
+    const url      = `${clientUrl}/jobs/${j.id}`;
+    return `- [${j.title}](${url}) | Company: ${j.employer.companyName} | Salary: ${salary} | Location: ${location} | Regime: ${regime} | Category: ${j.category}`;
+  });
+
+  const companies = await prisma.employerProfile.findMany({
+    select: { companyName: true, description: true },
+    take: 40,
+  });
+
+  const companyLines = companies.map(c =>
+    `- ${c.companyName}${c.description ? ': ' + c.description.slice(0, 80) : ''}`
+  );
+
+  return [
+    `[PLATFORM DATA — ${jobs.length} active jobs, ${companies.length} companies]`,
+    '',
+    'ACTIVE JOBS:',
+    ...jobLines,
+    '',
+    'COMPANIES ON PLATFORM:',
+    ...companyLines,
+  ].join('\n');
+}
 
 const chat = async (req, res, next) => {
   try {
     const { message, history = [] } = req.body;
     if (!message?.trim()) return res.status(400).json({ message: 'Message is required' });
 
-    // Fetch some live platform context
-    const [jobCount, employerCount] = await Promise.all([
-      prisma.job.count({ where: { status: 'HIRING' } }),
-      prisma.employerProfile.count(),
-    ]);
-
-    const contextNote = `[Platform context: ${jobCount} active job listings, ${employerCount} registered employers]`;
+    const platformData = await buildPlatformContext();
 
     const messages = [
       ...history.map(h => ({ role: h.role, content: h.content })),
-      { role: 'user', content: `${contextNote}\n\n${message}` },
+      { role: 'user', content: `${message}\n\n${platformData}` },
     ];
 
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 512,
+      max_tokens: 1024,
       system: SYSTEM_PROMPT,
       messages,
     });

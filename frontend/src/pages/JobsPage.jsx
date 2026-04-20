@@ -510,14 +510,10 @@ export default function JobsPage() {
         {/* Footer */}
         <div className='mt-16 pt-6 border-t border-gray-100 flex items-center justify-between'>
           <div>
-            <div onClick={() => navigate('/')} className='inline-flex items-center gap-1.5 cursor-pointer mb-1.5 group'>
-              <div className='h-5 w-5 rounded-md bg-brand-600 flex items-center justify-center'>
-                <svg width='10' height='10' viewBox='0 0 20 20' fill='none'>
-                  <path d='M4 15L10 5L16 15' stroke='white' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/>
-                  <path d='M6.5 11H13.5' stroke='white' strokeWidth='2' strokeLinecap='round'/>
-                </svg>
+            <div onClick={() => navigate('/')} className='cursor-pointer inline-block mb-1.5'>
+              <div className='h-7 px-3 rounded-md bg-brand-600 inline-flex items-center text-white font-display font-bold text-[13px] tracking-wide'>
+                Azkard
               </div>
-              <span className='font-display font-semibold text-[12px] text-gray-700 tracking-tight group-hover:text-brand-600 transition-colors duration-150'>Azkard</span>
             </div>
             <p className='text-[11px] text-gray-400'>© 2026 Azkard. ყველა უფლება დაცულია.</p>
           </div>
