@@ -1,0 +1,4 @@
+-- AddColumn expiresAt, isForStudents, isInternship to Job
+ALTER TABLE "Job" ADD COLUMN IF NOT EXISTS "expiresAt" TIMESTAMP(3);
+ALTER TABLE "Job" ADD COLUMN IF NOT EXISTS "isForStudents" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "Job" ADD COLUMN IF NOT EXISTS "isInternship" BOOLEAN NOT NULL DEFAULT false;

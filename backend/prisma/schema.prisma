@@ -59,15 +59,38 @@ model User {
 }
 
 model EmployerProfile {
-  id          Int     @id @default(autoincrement())
-  userId      Int     @unique
+  id          Int          @id @default(autoincrement())
+  userId      Int          @unique
   companyName String
   description String?
   website     String?
   logoUrl     String?
   avatarUrl   String?
-  user        User    @relation(fields: [userId], references: [id])
+  user        User         @relation(fields: [userId], references: [id])
   jobs        Job[]
+  companyBoxes CompanyBox[]
+}
+
+model CompanyBox {
+  id          Int           @id @default(autoincrement())
+  companyId   Int
+  title       String
+  description String?
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  employer    EmployerProfile @relation(fields: [companyId], references: [id])
+  submissions CVSubmission[]
+}
+
+model CVSubmission {
+  id             Int        @id @default(autoincrement())
+  companyBoxId   Int
+  candidateName  String
+  candidateEmail String
+  cvUrl          String
+  message        String?
+  submittedAt    DateTime   @default(now())
+  companyBox     CompanyBox @relation(fields: [companyBoxId], references: [id])
 }
 
 model CandidateProfile {
@@ -78,6 +101,7 @@ model CandidateProfile {
   headline     String?
   location     String?
   cvUrl        String?
+  avatarUrl    String?
   user         User          @relation(fields: [userId], references: [id])
   applications Application[]
 }
@@ -87,20 +111,27 @@ model Job {
   title             String
   description       String
   location          String?
-  salary            Int
+  salaryMin         Int
+  salaryMax         Int?
   currency          String            @default("GEL")
   jobRegime         JobRegime
-  startDate         DateTime          @default(now())
-  endDate           DateTime          @default(dbgenerated("(now() + interval '30 days')"))
+  jobPeriod         String?
   experience        Experience        @default(NONE)
   applicationMethod ApplicationMethod @default(CV_ONLY)
   status            JobStatus         @default(HIRING)
   views             Int               @default(0)
   createdAt         DateTime          @default(now())
+  expiresAt         DateTime?
+  isForStudents     Boolean           @default(false)
+  isInternship      Boolean           @default(false)
   employerProfileId Int
   employer          EmployerProfile   @relation(fields: [employerProfileId], references: [id])
   applications      Application[]
-  category JobCategory @default(OTHER)
+  category          JobCategory       @default(OTHER)
+  isPremium         Boolean           @default(false)
+  premiumBadgeLabel String?
+  highlightColor    String?
+  featuredUntil     DateTime?
 }
 
 model Application {

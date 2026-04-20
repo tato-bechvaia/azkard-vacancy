@@ -1,0 +1,25 @@
+const router = require('express').Router();
+const { protect, requireRole } = require('../middleware/auth.middleware');
+const {
+  createBox, listAllBoxes, listBoxes, submitCV, listSubmissions, updateBox, cvUpload,
+} = require('../controllers/companyBox.controller');
+
+// Public — all active company boxes (for main page)
+router.get('/', listAllBoxes);
+
+// Employer — create a CV box
+router.post('/', protect, requireRole('EMPLOYER'), createBox);
+
+// Public — list active boxes for a company
+router.get('/:companyId', listBoxes);
+
+// Public (candidate) — submit a CV to a box
+router.post('/:boxId/submit', cvUpload.single('cv'), submitCV);
+
+// Employer — view submissions (auth + ownership enforced in controller)
+router.get('/:boxId/submissions', protect, requireRole('EMPLOYER'), listSubmissions);
+
+// Employer — toggle active / update title or description
+router.patch('/:boxId', protect, requireRole('EMPLOYER'), updateBox);
+
+module.exports = router;

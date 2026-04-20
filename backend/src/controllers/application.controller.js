@@ -120,7 +120,6 @@ const viewCv = async (req, res, next) => {
       include: {
         job: true,
         candidate: { include: { user: true } },
-        application_employer: true,
       }
     });
 
