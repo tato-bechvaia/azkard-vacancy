@@ -10,6 +10,7 @@ const applicationRoutes  = require('./routes/application.routes');
 const profileRoutes      = require('./routes/profile.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const companyBoxRoutes   = require('./routes/companyBox.routes');
+const chatRoutes         = require('./routes/chat.routes');
 const { errorHandler }   = require('./middleware/error.middleware');
 const { expandAssetUrlsInJson, defaultBase } = require('./utils/publicUrl');
 
@@ -44,6 +45,7 @@ app.use('/api/applications',  applicationRoutes);
 app.use('/api/profiles',      profileRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/company-boxes', companyBoxRoutes);
+app.use('/api/chat',         chatRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 app.use(errorHandler);

@@ -19,4 +19,10 @@ const requireRole = (...roles) => (req, res, next) => {
   next();
 };
 
-module.exports = { protect, requireRole };
+const requireAdmin = (req, res, next) => {
+  if (!req.user?.isAdmin)
+    return res.status(403).json({ message: 'Admin only' });
+  next();
+};
+
+module.exports = { protect, requireRole, requireAdmin };

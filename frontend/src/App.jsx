@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './store/AuthContext';
 import { SocketProvider } from './store/SocketContext';
 import Toast from './components/Toast';
+import AdminChatbot from './components/AdminChatbot';
 
 import LoginPage     from './pages/LoginPage';
 import RegisterPage  from './pages/RegisterPage';
@@ -16,9 +17,11 @@ function PrivateRoute({ children }) {
 }
 
 function AppContent() {
+  const { user } = useAuth();
   return (
     <>
       <Toast />
+      {user?.isAdmin && <AdminChatbot />}
       <BrowserRouter>
         <Routes>
           <Route path='/'            element={<JobsPage />} />

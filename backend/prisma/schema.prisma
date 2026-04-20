@@ -51,6 +51,7 @@ model User {
   role             Role
   phone            String?
   isVerified       Boolean           @default(false)
+  isAdmin          Boolean           @default(false)
   verifyCode       String?
   createdAt        DateTime          @default(now())
   employerProfile  EmployerProfile?

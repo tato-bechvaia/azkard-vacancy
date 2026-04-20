@@ -40,12 +40,12 @@ const login = async (req, res, next) => {
     if (!user || !(await bcrypt.compare(password, user.passwordHash)))
       return res.status(401).json({ message: 'არასწორი ელ-ფოსტა ან პაროლი' });
 
-    const token = generateToken({ id: user.id, email: user.email, role: user.role });
+    const token = generateToken({ id: user.id, email: user.email, role: user.role, isAdmin: user.isAdmin });
     const displayName = user.role === 'EMPLOYER'
       ? user.employerProfile?.companyName || ''
       : (user.candidateProfile?.firstName || '') + ' ' + (user.candidateProfile?.lastName || '');
 
-    res.json({ token, role: user.role, displayName: displayName.trim() });
+    res.json({ token, role: user.role, displayName: displayName.trim(), isAdmin: user.isAdmin });
   } catch (err) { next(err); }
 };
 

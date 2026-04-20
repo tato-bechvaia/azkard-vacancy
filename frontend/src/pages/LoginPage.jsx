@@ -15,7 +15,7 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       const { data } = await api.post('/auth/login', form);
-      login(data.token, data.role, data.displayName);
+      login(data.token, data.role, data.displayName, data.isAdmin);
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'შესვლა ვერ მოხერხდა');
