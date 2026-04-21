@@ -1,16 +1,25 @@
-const prisma = require('../prisma');
+const supabase = require('../supabase');
 
 const sendNotification = async (app, userId, message) => {
-  const notification = await prisma.notification.create({
-    data: { userId, message },
-  });
+  const { data: notification, error } = await supabase
+    .from('notifications')
+    .insert({ user_id: userId, message })
+    .select()
+    .single();
+  if (error) throw error;
 
   const io          = app.get('io');
   const onlineUsers = app.get('onlineUsers');
-  const socketId    = onlineUsers.get(userId);
+  const socketId    = onlineUsers?.get(userId);
 
   if (io && socketId) {
-    io.to(socketId).emit('notification', notification);
+    io.to(socketId).emit('notification', {
+      id:        notification.id,
+      userId:    notification.user_id,
+      message:   notification.message,
+      isRead:    notification.is_read,
+      createdAt: notification.created_at,
+    });
   }
 
   return notification;

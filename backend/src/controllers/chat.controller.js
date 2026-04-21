@@ -1,5 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk');
-const prisma = require('../prisma');
+const supabase = require('../supabase');
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -22,36 +22,35 @@ Rules:
 - Keep answers concise. When listing jobs, show max 5 at a time unless asked for more.`;
 
 async function buildPlatformContext() {
-  const jobs = await prisma.job.findMany({
-    where: { status: 'HIRING' },
-    include: { employer: { select: { companyName: true, id: true } } },
-    orderBy: { createdAt: 'desc' },
-    take: 80,
-  });
+  const { data: jobs } = await supabase
+    .from('jobs')
+    .select('id, title, salary_min, salary_max, currency, location, job_regime, category, employer_profiles!employer_profile_id(company_name)')
+    .eq('status', 'HIRING')
+    .order('created_at', { ascending: false })
+    .limit(80);
 
   const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
 
-  const jobLines = jobs.map(j => {
-    const salary = j.salaryMax
-      ? `${j.salaryMin}–${j.salaryMax} ${j.currency}`
-      : `${j.salaryMin}+ ${j.currency}`;
+  const jobLines = (jobs || []).map(j => {
+    const salary = j.salary_max
+      ? `${j.salary_min}–${j.salary_max} ${j.currency}`
+      : `${j.salary_min}+ ${j.currency}`;
     const location = j.location || 'not specified';
-    const regime   = j.jobRegime;
-    const url      = `${clientUrl}/jobs/${j.id}`;
-    return `- [${j.title}](${url}) | Company: ${j.employer.companyName} | Salary: ${salary} | Location: ${location} | Regime: ${regime} | Category: ${j.category}`;
+    const url = `${clientUrl}/jobs/${j.id}`;
+    return `- [${j.title}](${url}) | Company: ${j.employer_profiles?.company_name} | Salary: ${salary} | Location: ${location} | Regime: ${j.job_regime} | Category: ${j.category}`;
   });
 
-  const companies = await prisma.employerProfile.findMany({
-    select: { companyName: true, description: true },
-    take: 40,
-  });
+  const { data: companies } = await supabase
+    .from('employer_profiles')
+    .select('company_name, description')
+    .limit(40);
 
-  const companyLines = companies.map(c =>
-    `- ${c.companyName}${c.description ? ': ' + c.description.slice(0, 80) : ''}`
+  const companyLines = (companies || []).map(c =>
+    `- ${c.company_name}${c.description ? ': ' + c.description.slice(0, 80) : ''}`
   );
 
   return [
-    `[PLATFORM DATA — ${jobs.length} active jobs, ${companies.length} companies]`,
+    `[PLATFORM DATA — ${(jobs || []).length} active jobs, ${(companies || []).length} companies]`,
     '',
     'ACTIVE JOBS:',
     ...jobLines,

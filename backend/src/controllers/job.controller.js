@@ -1,6 +1,6 @@
-const prisma = require('../prisma');
+const supabase = require('../supabase');
 
-// Compute effective expiry: stored expiresAt OR createdAt + 30 days
+// Compute effective expiry: stored expires_at OR created_at + 30 days
 const effectiveExpiry = (job) => {
   if (job.expiresAt) return job.expiresAt;
   const d = new Date(job.createdAt);
@@ -8,143 +8,152 @@ const effectiveExpiry = (job) => {
   return d;
 };
 
-const withExpiry = (jobs) => jobs.map(j => ({ ...j, expiresAt: effectiveExpiry(j) }));
+// Normalize a raw Supabase job row into the shape the frontend expects
+const formatJob = (j) => {
+  if (!j) return null;
+  const ep = j.employer_profiles;
+  const appCount = Array.isArray(j.applications)
+    ? (j.applications[0]?.count ?? 0)
+    : 0;
 
-const includeEmployer = {
-  employer: { select: { companyName: true, logoUrl: true, avatarUrl: true } },
-  _count: { select: { applications: true } },
+  return {
+    id: j.id,
+    title: j.title,
+    description: j.description,
+    location: j.location,
+    salaryMin: j.salary_min,
+    salaryMax: j.salary_max,
+    currency: j.currency,
+    jobRegime: j.job_regime,
+    jobPeriod: j.job_period,
+    experience: j.experience,
+    applicationMethod: j.application_method,
+    status: j.status,
+    views: j.views,
+    createdAt: j.created_at,
+    expiresAt: j.expires_at,
+    isForStudents: j.is_for_students,
+    isInternship: j.is_internship,
+    employerProfileId: j.employer_profile_id,
+    category: j.category,
+    isPremium: j.is_premium,
+    premiumBadgeLabel: j.premium_badge_label,
+    highlightColor: j.highlight_color,
+    featuredUntil: j.featured_until,
+    employer: ep ? {
+      companyName: ep.company_name,
+      logoUrl: ep.logo_url,
+      avatarUrl: ep.avatar_url,
+      website: ep.website,
+      jobCount: ep.jobs?.[0]?.count,
+    } : undefined,
+    _count: { applications: appCount },
+  };
 };
 
-// Active job base filter — status HIRING and not expired
-const activeBase = (now) => ({
-  status: 'HIRING',
-  OR: [
-    { expiresAt: null },
-    { expiresAt: { gte: now } },
-  ],
-});
+const withExpiry = (jobs) => jobs.map(j => ({ ...j, expiresAt: effectiveExpiry(j) }));
 
+const EMPLOYER_SELECT = `*, employer_profiles!employer_profile_id(company_name, logo_url, avatar_url), applications(count)`;
 const CAROUSEL_TAKE = 16;
+
+// Build the active-job filter on a Supabase query
+const applyActiveFilter = (query, now) =>
+  query
+    .eq('status', 'HIRING')
+    .or(`expires_at.is.null,expires_at.gte.${now.toISOString()}`);
 
 const listJobs = async (req, res, next) => {
   try {
-    const { search, location, regime, experience, category, salaryMin, salaryMax, page = 1, limit = 10 } = req.query;
+    const {
+      search, location, regime, experience, category,
+      salaryMin, salaryMax, page = 1, limit = 10,
+    } = req.query;
     const now = new Date();
-
-    const sharedWhere = {
-      ...activeBase(now),
-      ...(search && {
-        OR: [
-          { title: { contains: search, mode: 'insensitive' } },
-          { employer: { companyName: { contains: search, mode: 'insensitive' } } },
-        ],
-      }),
-      ...(location && { location: { contains: location, mode: 'insensitive' } }),
-      ...(regime && { jobRegime: regime }),
-      ...(experience && { experience }),
-      ...(category && { category }),
-      ...(salaryMin && { salaryMin: { gte: +salaryMin } }),
-      ...(salaryMax && { salaryMin: { lte: +salaryMax } }),
-    };
-
-    const premiumWhere = {
-      ...sharedWhere,
-      isPremium: true,
-      OR: [
-        { featuredUntil: null },
-        { featuredUntil: { gte: now } },
-      ],
-    };
-
-    const standardWhere = { ...sharedWhere, isPremium: false };
-
-    // Today start (for today's vacancies carousel)
     const todayStart = new Date(now);
     todayStart.setHours(0, 0, 0, 0);
 
+    // Build shared filter builder for reuse
+    const applySharedFilters = (query) => {
+      query = applyActiveFilter(query, now);
+      if (location) query = query.ilike('location', `%${location}%`);
+      if (regime)   query = query.eq('job_regime', regime);
+      if (experience) query = query.eq('experience', experience);
+      if (category)   query = query.eq('category', category);
+      if (salaryMin)  query = query.gte('salary_min', +salaryMin);
+      if (salaryMax)  query = query.lte('salary_min', +salaryMax);
+      if (search)     query = query.ilike('title', `%${search}%`);
+      return query;
+    };
+
+    const skip = (+page - 1) * +limit;
+
     const [
-      premiumJobs,
-      standardJobs,
-      total,
-      carouselStudents,
-      carouselInternships,
-      carouselTopSalaries,
-      carouselToday,
-      carouselTop,
+      { data: premiumJobs },
+      { data: standardJobs },
+      { count: total },
+      { data: carouselStudents },
+      { data: carouselInternships },
+      { data: carouselTopSalaries },
+      { data: carouselToday },
+      { data: carouselTop },
     ] = await Promise.all([
       // Premium jobs
-      prisma.job.findMany({
-        where: premiumWhere,
-        include: includeEmployer,
-        orderBy: { createdAt: 'desc' },
-        take: 20,
-      }),
+      applySharedFilters(
+        supabase.from('jobs').select(EMPLOYER_SELECT).eq('is_premium', true)
+          .or(`featured_until.is.null,featured_until.gte.${now.toISOString()}`)
+      ).order('created_at', { ascending: false }).limit(20),
+
       // Standard paginated jobs
-      prisma.job.findMany({
-        where: standardWhere,
-        skip: (+page - 1) * +limit,
-        take: +limit,
-        include: includeEmployer,
-        orderBy: { createdAt: 'desc' },
-      }),
-      // Total count
-      prisma.job.count({ where: standardWhere }),
+      applySharedFilters(
+        supabase.from('jobs').select(EMPLOYER_SELECT).eq('is_premium', false)
+      ).order('created_at', { ascending: false }).range(skip, skip + +limit - 1),
+
+      // Total standard count
+      applySharedFilters(
+        supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('is_premium', false)
+      ),
+
       // Carousel: For Students
-      prisma.job.findMany({
-        where: {
-          ...activeBase(now),
-          OR: [{ isForStudents: true }, { experience: 'NONE' }],
-        },
-        include: includeEmployer,
-        orderBy: { createdAt: 'desc' },
-        take: CAROUSEL_TAKE,
-      }),
+      applyActiveFilter(supabase.from('jobs').select(EMPLOYER_SELECT), now)
+        .or('is_for_students.eq.true,experience.eq.NONE')
+        .order('created_at', { ascending: false }).limit(CAROUSEL_TAKE),
+
       // Carousel: Internships
-      prisma.job.findMany({
-        where: { ...activeBase(now), isInternship: true },
-        include: includeEmployer,
-        orderBy: { createdAt: 'desc' },
-        take: CAROUSEL_TAKE,
-      }),
+      applyActiveFilter(supabase.from('jobs').select(EMPLOYER_SELECT), now)
+        .eq('is_internship', true)
+        .order('created_at', { ascending: false }).limit(CAROUSEL_TAKE),
+
       // Carousel: Top Salaries
-      prisma.job.findMany({
-        where: activeBase(now),
-        include: includeEmployer,
-        orderBy: { salaryMin: 'desc' },
-        take: CAROUSEL_TAKE,
-      }),
+      applyActiveFilter(supabase.from('jobs').select(EMPLOYER_SELECT), now)
+        .order('salary_min', { ascending: false }).limit(CAROUSEL_TAKE),
+
       // Carousel: Today's Vacancies
-      prisma.job.findMany({
-        where: { ...activeBase(now), createdAt: { gte: todayStart } },
-        include: includeEmployer,
-        orderBy: { createdAt: 'desc' },
-        take: CAROUSEL_TAKE,
-      }),
-      // Carousel: Top Vacancies (by views + applications)
-      prisma.job.findMany({
-        where: activeBase(now),
-        include: includeEmployer,
-        orderBy: { views: 'desc' },
-        take: CAROUSEL_TAKE,
-      }),
+      applyActiveFilter(supabase.from('jobs').select(EMPLOYER_SELECT), now)
+        .gte('created_at', todayStart.toISOString())
+        .order('created_at', { ascending: false }).limit(CAROUSEL_TAKE),
+
+      // Carousel: Top Vacancies (by views)
+      applyActiveFilter(supabase.from('jobs').select(EMPLOYER_SELECT), now)
+        .order('views', { ascending: false }).limit(CAROUSEL_TAKE),
     ]);
 
-    // Sort top vacancies by engagement score
-    const sortedTop = [...carouselTop]
+    const fmt = (jobs) => withExpiry((jobs || []).map(formatJob));
+
+    const sortedTop = [...(carouselTop || []).map(formatJob)]
       .map(j => ({ ...j, score: j.views + (j._count?.applications || 0) * 10 }))
       .sort((a, b) => b.score - a.score);
 
     res.json({
-      premiumJobs: withExpiry(premiumJobs),
-      standardJobs: withExpiry(standardJobs),
-      total,
-      page: +page,
-      pages: Math.ceil(total / +limit),
+      premiumJobs:   withExpiry((premiumJobs  || []).map(formatJob)),
+      standardJobs:  withExpiry((standardJobs || []).map(formatJob)),
+      total:  total || 0,
+      page:   +page,
+      pages:  Math.ceil((total || 0) / +limit),
       carousels: {
-        students:    withExpiry(carouselStudents),
-        internships: withExpiry(carouselInternships),
-        topSalaries: withExpiry(carouselTopSalaries),
-        today:       withExpiry(carouselToday),
+        students:    fmt(carouselStudents),
+        internships: fmt(carouselInternships),
+        topSalaries: fmt(carouselTopSalaries),
+        today:       fmt(carouselToday),
         top:         withExpiry(sortedTop),
       },
     });
@@ -153,32 +162,29 @@ const listJobs = async (req, res, next) => {
 
 const getJob = async (req, res, next) => {
   try {
-    const job = await prisma.job.findUnique({
-      where: { id: +req.params.id },
-      include: {
-        employer: {
-          select: {
-            companyName: true,
-            logoUrl: true,
-            avatarUrl: true,
-            website: true,
-            _count: { select: { jobs: true } }
-          }
-        },
-        _count: { select: { applications: true } }
-      },
-    });
+    const { data: job, error } = await supabase
+      .from('jobs')
+      .select(`
+        *,
+        employer_profiles!employer_profile_id(
+          company_name, logo_url, avatar_url, website,
+          jobs(count)
+        ),
+        applications(count)
+      `)
+      .eq('id', +req.params.id)
+      .maybeSingle();
+
+    if (error) throw error;
     if (!job) return res.status(404).json({ message: 'ვაკანსია ვერ მოიძებნა' });
 
-    await prisma.job.update({
-      where: { id: +req.params.id },
-      data: { views: { increment: 1 } },
-    });
+    // Increment view count
+    await supabase.from('jobs').update({ views: (job.views || 0) + 1 }).eq('id', +req.params.id);
 
+    const formatted = formatJob(job);
     res.json({
-      ...job,
-      expiresAt: effectiveExpiry(job),
-      employer: { ...job.employer, jobCount: job.employer._count.jobs }
+      ...formatted,
+      expiresAt: effectiveExpiry(formatted),
     });
   } catch (err) { next(err); }
 };
@@ -192,66 +198,98 @@ const createJob = async (req, res, next) => {
       isForStudents, isInternship, expiresAt,
     } = req.body;
 
-    const employer = await prisma.employerProfile.findUnique({
-      where: { userId: req.user.id },
-    });
+    const { data: employer } = await supabase
+      .from('employer_profiles')
+      .select('id')
+      .eq('user_id', req.user.id)
+      .maybeSingle();
     if (!employer) return res.status(404).json({ message: 'Employer profile not found' });
 
     const defaultExpiry = new Date();
     defaultExpiry.setDate(defaultExpiry.getDate() + 30);
 
-    const job = await prisma.job.create({
-      data: {
-        title, description, location,
-        salaryMin: +salaryMin,
-        ...(salaryMax && { salaryMax: +salaryMax }),
-        ...(jobPeriod && { jobPeriod }),
-        jobRegime,
+    const { data: job, error } = await supabase
+      .from('jobs')
+      .insert({
+        title,
+        description,
+        location: location || null,
+        salary_min: +salaryMin,
+        salary_max: salaryMax ? +salaryMax : null,
+        job_period: jobPeriod || null,
+        job_regime: jobRegime,
         experience: experience || 'NONE',
-        applicationMethod: applicationMethod || 'CV_ONLY',
+        application_method: applicationMethod || 'CV_ONLY',
         category: category || 'OTHER',
-        employerProfileId: employer.id,
-        isPremium: isPremium === true || isPremium === 'true',
-        ...(premiumBadgeLabel && { premiumBadgeLabel }),
-        ...(highlightColor && { highlightColor }),
-        ...(featuredUntil && { featuredUntil: new Date(featuredUntil) }),
-        isForStudents: isForStudents === true || isForStudents === 'true',
-        isInternship: isInternship === true || isInternship === 'true',
-        expiresAt: expiresAt ? new Date(expiresAt) : defaultExpiry,
-      },
-    });
-    res.status(201).json(job);
+        employer_profile_id: employer.id,
+        is_premium: isPremium === true || isPremium === 'true',
+        premium_badge_label: premiumBadgeLabel || null,
+        highlight_color: highlightColor || null,
+        featured_until: featuredUntil ? new Date(featuredUntil).toISOString() : null,
+        is_for_students: isForStudents === true || isForStudents === 'true',
+        is_internship: isInternship === true || isInternship === 'true',
+        expires_at: expiresAt ? new Date(expiresAt).toISOString() : defaultExpiry.toISOString(),
+      })
+      .select()
+      .single();
+    if (error) throw error;
+
+    res.status(201).json(formatJob(job));
   } catch (err) { next(err); }
 };
 
 const updateJob = async (req, res, next) => {
   try {
-    const job = await prisma.job.update({
-      where: { id: +req.params.id },
-      data: req.body,
-    });
-    res.json(job);
+    // Convert camelCase body keys to snake_case for Supabase
+    const map = {
+      salaryMin: 'salary_min', salaryMax: 'salary_max',
+      jobRegime: 'job_regime', jobPeriod: 'job_period',
+      applicationMethod: 'application_method', expiresAt: 'expires_at',
+      isForStudents: 'is_for_students', isInternship: 'is_internship',
+      isPremium: 'is_premium', premiumBadgeLabel: 'premium_badge_label',
+      highlightColor: 'highlight_color', featuredUntil: 'featured_until',
+    };
+    const data = {};
+    for (const [k, v] of Object.entries(req.body)) {
+      data[map[k] || k] = v;
+    }
+
+    const { data: job, error } = await supabase
+      .from('jobs')
+      .update(data)
+      .eq('id', +req.params.id)
+      .select()
+      .single();
+    if (error) throw error;
+
+    res.json(formatJob(job));
   } catch (err) { next(err); }
 };
 
 const deleteJob = async (req, res, next) => {
   try {
-    await prisma.job.delete({ where: { id: +req.params.id } });
+    const { error } = await supabase.from('jobs').delete().eq('id', +req.params.id);
+    if (error) throw error;
     res.json({ message: 'Job deleted' });
   } catch (err) { next(err); }
 };
 
 const myJobs = async (req, res, next) => {
   try {
-    const employer = await prisma.employerProfile.findUnique({
-      where: { userId: req.user.id },
-    });
-    const jobs = await prisma.job.findMany({
-      where: { employerProfileId: employer.id },
-      include: { _count: { select: { applications: true } } },
-      orderBy: { createdAt: 'desc' },
-    });
-    res.json(jobs);
+    const { data: employer } = await supabase
+      .from('employer_profiles')
+      .select('id')
+      .eq('user_id', req.user.id)
+      .maybeSingle();
+
+    const { data: jobs, error } = await supabase
+      .from('jobs')
+      .select('*, applications(count)')
+      .eq('employer_profile_id', employer.id)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+
+    res.json((jobs || []).map(formatJob));
   } catch (err) { next(err); }
 };
 

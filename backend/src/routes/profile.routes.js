@@ -2,7 +2,7 @@ const router   = require('express').Router();
 const { getMyProfile, updateMyProfile } = require('../controllers/profile.controller');
 const { protect } = require('../middleware/auth.middleware');
 const upload   = require('../middleware/upload.middleware');
-const prisma = require('../prisma');
+const supabase = require('../supabase');
 
 router.get('/me',  protect, getMyProfile);
 router.put('/me',  protect, updateMyProfile);
@@ -10,45 +10,58 @@ router.put('/me',  protect, updateMyProfile);
 router.post('/avatar', protect, upload.single('avatar'), async (req, res, next) => {
   try {
     const avatarUrl = '/uploads/' + req.file.filename;
-    const profile = req.user.role === 'CANDIDATE'
-      ? await prisma.candidateProfile.update({
-          where: { userId: req.user.id },
-          data: { avatarUrl },
-        })
-      : await prisma.employerProfile.update({
-          where: { userId: req.user.id },
-          data: { avatarUrl },
-        });
-    res.json({ avatarUrl: profile.avatarUrl });
+
+    if (req.user.role === 'CANDIDATE') {
+      await supabase.from('candidate_profiles').update({ avatar_url: avatarUrl }).eq('user_id', req.user.id);
+    } else {
+      await supabase.from('employer_profiles').update({ avatar_url: avatarUrl }).eq('user_id', req.user.id);
+    }
+
+    res.json({ avatarUrl });
   } catch (err) { next(err); }
 });
 
 router.post('/cv', protect, upload.single('cv'), async (req, res, next) => {
   try {
     const cvUrl = '/uploads/' + req.file.filename;
-    const profile = await prisma.candidateProfile.update({
-      where: { userId: req.user.id },
-      data: { cvUrl },
-    });
-    res.json({ cvUrl: profile.cvUrl });
+    await supabase.from('candidate_profiles').update({ cv_url: cvUrl }).eq('user_id', req.user.id);
+    res.json({ cvUrl });
   } catch (err) { next(err); }
 });
 
 router.get('/company/:slug', async (req, res, next) => {
   try {
     const slug = req.params.slug.replace(/-/g, ' ');
-    const employer = await prisma.employerProfile.findFirst({
-      where: { companyName: { equals: slug, mode: 'insensitive' } },
-      include: {
-        jobs: {
-          where: { status: 'HIRING' },
-          include: { _count: { select: { applications: true } } },
-          orderBy: { createdAt: 'desc' },
-        },
-      },
-    });
+
+    const { data: employer } = await supabase
+      .from('employer_profiles')
+      .select('*')
+      .ilike('company_name', slug)
+      .maybeSingle();
     if (!employer) return res.status(404).json({ message: 'კომპანია ვერ მოიძებნა' });
-    res.json(employer);
+
+    const { data: jobs } = await supabase
+      .from('jobs')
+      .select('*, applications(count)')
+      .eq('employer_profile_id', employer.id)
+      .eq('status', 'HIRING')
+      .order('created_at', { ascending: false });
+
+    res.json({
+      id: employer.id,
+      userId: employer.user_id,
+      companyName: employer.company_name,
+      description: employer.description,
+      website: employer.website,
+      logoUrl: employer.logo_url,
+      avatarUrl: employer.avatar_url,
+      jobs: (jobs || []).map(j => ({
+        id: j.id, title: j.title, location: j.location,
+        salaryMin: j.salary_min, salaryMax: j.salary_max,
+        jobRegime: j.job_regime, createdAt: j.created_at,
+        _count: { applications: j.applications?.[0]?.count ?? 0 },
+      })),
+    });
   } catch (err) { next(err); }
 });
 
