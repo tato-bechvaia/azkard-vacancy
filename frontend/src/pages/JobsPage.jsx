@@ -96,7 +96,7 @@ export default function JobsPage() {
     if (loadingRef.current) return;
     loadingRef.current = true;
     setLoading(true);
-    const category = categories.length === 1 ? categories[0] : '';
+    const category = categories.length > 0 ? categories.join(',') : '';
     api.get('/jobs', { params: { search, location, regime, experience, category, salaryMin, salaryMax, page, limit: LIMIT } })
       .then(({ data }) => {
         if (page === 1) {

@@ -83,10 +83,14 @@ const listJobs = async (req, res, next) => {
       if (location) query = query.ilike('location', `%${location}%`);
       if (regime)   query = query.eq('job_regime', regime);
       if (experience) query = query.eq('experience', experience);
-      if (category)   query = query.eq('category', category);
       if (salaryMin)  query = query.gte('salary_min', +salaryMin);
       if (salaryMax)  query = query.lte('salary_min', +salaryMax);
       if (search)     query = query.ilike('title', `%${search}%`);
+      if (category) {
+        const cats = category.split(',').map(c => c.trim()).filter(Boolean);
+        if (cats.length === 1) query = query.eq('category', cats[0]);
+        else if (cats.length > 1) query = query.in('category', cats);
+      }
       return query;
     };
 
