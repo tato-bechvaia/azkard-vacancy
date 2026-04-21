@@ -1,4 +1,5 @@
 const supabase = require('../supabase');
+const cache = require('../utils/cache');
 
 // Compute effective expiry: stored expires_at OR created_at + 30 days
 const effectiveExpiry = (job) => {
@@ -64,6 +65,10 @@ const applyActiveFilter = (query, now) =>
 
 const listJobs = async (req, res, next) => {
   try {
+    const cacheKey = 'jobs:' + JSON.stringify(req.query);
+    const cached = cache.get(cacheKey);
+    if (cached) return res.json(cached);
+
     const {
       search, location, regime, experience, category,
       salaryMin, salaryMax, page = 1, limit = 10,
@@ -143,7 +148,7 @@ const listJobs = async (req, res, next) => {
       .map(j => ({ ...j, score: j.views + (j._count?.applications || 0) * 10 }))
       .sort((a, b) => b.score - a.score);
 
-    res.json({
+    const result = {
       premiumJobs:   withExpiry((premiumJobs  || []).map(formatJob)),
       standardJobs:  withExpiry((standardJobs || []).map(formatJob)),
       total:  total || 0,
@@ -156,12 +161,18 @@ const listJobs = async (req, res, next) => {
         today:       fmt(carouselToday),
         top:         withExpiry(sortedTop),
       },
-    });
+    };
+    cache.set(cacheKey, result, 60);
+    res.json(result);
   } catch (err) { next(err); }
 };
 
 const getJob = async (req, res, next) => {
   try {
+    const cacheKey = 'job:' + req.params.id;
+    const cached = cache.get(cacheKey);
+    if (cached) return res.json(cached);
+
     const { data: job, error } = await supabase
       .from('jobs')
       .select(`
@@ -181,11 +192,9 @@ const getJob = async (req, res, next) => {
     // Increment view count
     await supabase.from('jobs').update({ views: (job.views || 0) + 1 }).eq('id', +req.params.id);
 
-    const formatted = formatJob(job);
-    res.json({
-      ...formatted,
-      expiresAt: effectiveExpiry(formatted),
-    });
+    const formatted = { ...formatJob(job), expiresAt: effectiveExpiry(formatJob(job)) };
+    cache.set(cacheKey, formatted, 30);
+    res.json(formatted);
   } catch (err) { next(err); }
 };
 
@@ -234,6 +243,7 @@ const createJob = async (req, res, next) => {
       .single();
     if (error) throw error;
 
+    cache.delByPrefix('jobs:');
     res.status(201).json(formatJob(job));
   } catch (err) { next(err); }
 };
@@ -262,6 +272,8 @@ const updateJob = async (req, res, next) => {
       .single();
     if (error) throw error;
 
+    cache.delByPrefix('jobs:');
+    cache.del('job:' + req.params.id);
     res.json(formatJob(job));
   } catch (err) { next(err); }
 };
@@ -270,6 +282,8 @@ const deleteJob = async (req, res, next) => {
   try {
     const { error } = await supabase.from('jobs').delete().eq('id', +req.params.id);
     if (error) throw error;
+    cache.delByPrefix('jobs:');
+    cache.del('job:' + req.params.id);
     res.json({ message: 'Job deleted' });
   } catch (err) { next(err); }
 };

@@ -1,4 +1,5 @@
 const supabase = require('../supabase');
+const cache = require('../utils/cache');
 const { z } = require('zod');
 const path = require('path');
 const fs = require('fs');
@@ -51,6 +52,7 @@ const createBox = async (req, res, next) => {
       .single();
     if (error) throw error;
 
+    cache.del('company_boxes:all');
     res.status(201).json({
       id: box.id, companyId: box.company_id, title: box.title,
       description: box.description, isActive: box.is_active, createdAt: box.created_at,
@@ -61,6 +63,9 @@ const createBox = async (req, res, next) => {
 // ── GET /api/company-boxes  (all active, for main page) ──────────────────
 const listAllBoxes = async (req, res, next) => {
   try {
+    const cached = cache.get('company_boxes:all');
+    if (cached) return res.json(cached);
+
     const { data: boxes, error } = await supabase
       .from('company_boxes')
       .select(`
@@ -72,7 +77,7 @@ const listAllBoxes = async (req, res, next) => {
       .order('created_at', { ascending: false });
     if (error) throw error;
 
-    res.json((boxes || []).map(b => ({
+    const result = (boxes || []).map(b => ({
       id: b.id,
       companyId: b.company_id,
       title: b.title,
@@ -85,7 +90,9 @@ const listAllBoxes = async (req, res, next) => {
         logoUrl: b.employer_profiles.logo_url,
       } : null,
       _count: { submissions: b.cv_submissions?.[0]?.count ?? 0 },
-    })));
+    }));
+    cache.set('company_boxes:all', result, 120);
+    res.json(result);
   } catch (err) { next(err); }
 };
 
@@ -226,6 +233,7 @@ const updateBox = async (req, res, next) => {
       .single();
     if (error) throw error;
 
+    cache.del('company_boxes:all');
     res.json({
       id: updated.id, companyId: updated.company_id, title: updated.title,
       description: updated.description, isActive: updated.is_active, createdAt: updated.created_at,
