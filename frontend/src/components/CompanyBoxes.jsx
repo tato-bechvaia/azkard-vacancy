@@ -12,6 +12,23 @@ const BOX_COLORS = [
   { bg: '#2e1e10', accent: '#f97316', glow: 'rgba(249,115,22,0.22)' },
 ];
 
+const CATEGORIES = [
+  { value: 'ALL',          label: 'ყველა' },
+  { value: 'IT',           label: 'IT' },
+  { value: 'SALES',        label: 'გაყიდვები' },
+  { value: 'MARKETING',    label: 'მარკეტინგი' },
+  { value: 'FINANCE',      label: 'ფინანსები' },
+  { value: 'DESIGN',       label: 'დიზაინი' },
+  { value: 'MANAGEMENT',   label: 'მენეჯმენტი' },
+  { value: 'LOGISTICS',    label: 'ლოჯისტიკა' },
+  { value: 'HEALTHCARE',   label: 'მედიცინა' },
+  { value: 'EDUCATION',    label: 'განათლება' },
+  { value: 'HOSPITALITY',  label: 'სტუმართმოყვარეობა' },
+  { value: 'OTHER',        label: 'სხვა' },
+];
+
+const CAT_LABEL = Object.fromEntries(CATEGORIES.slice(1).map(c => [c.value, c.label]));
+
 // ── CV Submission modal ──────────────────────────────────────────────────────
 function CVModal({ box, onClose }) {
   const [name, setName]     = useState('');
@@ -134,7 +151,6 @@ function CompanyBox({ box, colorScheme, index: idx }) {
   const [selected, setSelected] = useState(false);
   const [rotate, setRotate]     = useState({ x: 0, y: 0 });
 
-  // Staggered entrance via CSS delay
   const entranceDelay = `${idx * 80}ms`;
 
   const handleMouseMove = (e) => {
@@ -161,10 +177,7 @@ function CompanyBox({ box, colorScheme, index: idx }) {
   return (
     <>
       <div
-        style={{
-          perspective: '800px',
-          animationDelay: entranceDelay,
-        }}
+        style={{ perspective: '800px', animationDelay: entranceDelay }}
         className='company-box-entrance'>
         <div
           onMouseEnter={() => setHovered(true)}
@@ -219,9 +232,18 @@ function CompanyBox({ box, colorScheme, index: idx }) {
 
           {/* Description */}
           {box.description && (
-            <p className='text-[11.5px] text-gray-500 leading-relaxed mb-4 line-clamp-2'>
+            <p className='text-[11.5px] text-gray-500 leading-relaxed mb-3 line-clamp-2'>
               {box.description}
             </p>
+          )}
+
+          {/* Category badge */}
+          {box.category && box.category !== 'OTHER' && (
+            <div
+              className='inline-flex items-center text-[9.5px] font-medium px-2 py-0.5 rounded-full mb-3'
+              style={{ background: `${colorScheme.accent}18`, color: colorScheme.accent, border: `1px solid ${colorScheme.accent}30` }}>
+              {CAT_LABEL[box.category] || box.category}
+            </div>
           )}
 
           {/* CTA */}
@@ -253,8 +275,9 @@ function CompanyBox({ box, colorScheme, index: idx }) {
 
 // ── Section wrapper ──────────────────────────────────────────────────────────
 export default function CompanyBoxes() {
-  const [boxes, setBoxes]     = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [boxes, setBoxes]           = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [activeCategory, setActive] = useState('ALL');
 
   useEffect(() => {
     api.get('/company-boxes')
@@ -266,10 +289,18 @@ export default function CompanyBoxes() {
   if (loading) return null;
   if (!boxes.length) return null;
 
+  // Only show filter tabs for categories that actually have boxes
+  const presentCats = ['ALL', ...new Set(boxes.map(b => b.category || 'OTHER'))];
+  const filterTabs = CATEGORIES.filter(c => presentCats.includes(c.value));
+
+  const visible = activeCategory === 'ALL'
+    ? boxes
+    : boxes.filter(b => (b.category || 'OTHER') === activeCategory);
+
   return (
     <section className='py-12'>
       {/* Section header */}
-      <div className='flex items-center gap-3 mb-8'>
+      <div className='flex items-start justify-between gap-4 mb-6 flex-wrap'>
         <div className='flex flex-col'>
           <p className='text-[10px] tracking-[0.2em] uppercase text-gray-500 mb-1'>Direct Connect</p>
           <h2 className='font-display font-semibold text-[22px] text-white leading-tight tracking-tight'>
@@ -279,11 +310,26 @@ export default function CompanyBoxes() {
             პირდაპირი კავშირი კომპანიის HR-თან — ვაკანსიის გარეშეც
           </p>
         </div>
+
+        {/* Category filter dropdown */}
+        {filterTabs.length > 2 && (
+          <div className='flex-shrink-0 self-end'>
+            <select
+              value={activeCategory}
+              onChange={e => setActive(e.target.value)}
+              className='h-8 bg-white/[0.05] border border-white/[0.10] rounded-lg px-3 text-[12px] text-gray-300 focus:outline-none focus:border-white/20 transition-colors appearance-none pr-7 cursor-pointer'
+              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}>
+              {filterTabs.map(c => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Grid */}
       <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4'>
-        {boxes.map((box, i) => (
+        {visible.map((box, i) => (
           <CompanyBox
             key={box.id}
             box={box}
@@ -292,6 +338,12 @@ export default function CompanyBoxes() {
           />
         ))}
       </div>
+
+      {visible.length === 0 && (
+        <div className='text-center py-12 text-gray-600 text-[13px]'>
+          ამ კატეგორიაში CV Box არ არის
+        </div>
+      )}
     </section>
   );
 }

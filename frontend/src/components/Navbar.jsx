@@ -21,6 +21,16 @@ export default function Navbar() {
         {user ? (
           <>
             <NotificationPanel />
+            {user.role === 'CANDIDATE' && (
+              <button
+                onClick={() => navigate('/saved')}
+                title='შენახული ვაკანსიები'
+                className='w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-100 transition-colors duration-150 text-gray-400 hover:text-brand-600'>
+                <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.75' strokeLinecap='round' strokeLinejoin='round'>
+                  <path d='M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z'/>
+                </svg>
+              </button>
+            )}
             <button
               onClick={() => navigate('/profile')}
               className='flex items-center gap-2 h-8 px-3 rounded-lg hover:bg-surface-100 transition-colors duration-150 group'>

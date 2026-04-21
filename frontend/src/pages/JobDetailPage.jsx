@@ -30,6 +30,7 @@ export default function JobDetailPage() {
   const [cvFile, setCvFile]           = useState(null);
   const [savedCv, setSavedCv]         = useState(null);
   const [applied, setApplied]         = useState(false);
+  const [isSaved, setIsSaved]         = useState(false);
   const [message, setMessage]         = useState('');
 
   useEffect(() => {
@@ -38,8 +39,26 @@ export default function JobDetailPage() {
       api.get('/profiles/me').then(({ data }) => {
         if (data.cvUrl) setSavedCv(data.cvUrl);
       }).catch(() => {});
+      api.get('/saved-jobs/ids').then(({ data }) => {
+        setIsSaved(data.includes(+id));
+      }).catch(() => {});
     }
   }, [id]);
+
+  const toggleSave = async () => {
+    if (!user) return navigate('/login');
+    const prev = isSaved;
+    setIsSaved(!prev); // optimistic — update immediately
+    try {
+      if (prev) {
+        await api.delete('/saved-jobs/' + id);
+      } else {
+        await api.post('/saved-jobs/' + id);
+      }
+    } catch {
+      setIsSaved(prev); // revert on failure
+    }
+  };
 
   const handleApply = async () => {
     if (!user) return navigate('/login');
@@ -203,6 +222,21 @@ export default function JobDetailPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Save button */}
+              {user?.role === 'CANDIDATE' && (
+                <button
+                  onClick={toggleSave}
+                  className={'w-full h-10 rounded-xl text-[13px] font-medium flex items-center justify-center gap-2 border transition-all duration-150 ' +
+                    (isSaved
+                      ? 'bg-brand-50 border-brand-200 text-brand-600 hover:bg-red-50 hover:border-red-200 hover:text-red-500'
+                      : 'bg-white border-gray-100 text-gray-500 hover:border-brand-200 hover:text-brand-600 hover:bg-brand-50')}>
+                  <svg width='14' height='14' viewBox='0 0 24 24' fill={isSaved ? 'currentColor' : 'none'} stroke='currentColor' strokeWidth='1.75' strokeLinecap='round'>
+                    <path d='M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z'/>
+                  </svg>
+                  {isSaved ? 'შენახულია' : 'შენახვა'}
+                </button>
+              )}
 
               {/* Apply card — candidate, not yet applied */}
               {user?.role === 'CANDIDATE' && !applied && (

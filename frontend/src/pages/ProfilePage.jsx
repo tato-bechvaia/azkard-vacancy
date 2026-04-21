@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { assetUrl } from '../utils/assetUrl';
@@ -34,6 +34,95 @@ const INPUT = 'w-full h-10 bg-surface-50 border border-surface-200 rounded-lg px
 const TEXTAREA = 'w-full bg-surface-50 border border-surface-200 rounded-lg px-3 py-2.5 text-[13px] text-gray-800 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100/60 transition-all duration-150 resize-none placeholder-gray-400';
 const SELECT_CLS = 'h-10 bg-surface-50 border border-surface-200 rounded-lg px-3 text-[13px] text-gray-700 focus:outline-none focus:border-brand-400 transition-colors duration-150';
 
+// ── 3D Candidate Identity Card ────────────────────────────────────────────────
+function CandidateIdentityCard({ initials, name, headline }) {
+  const [rotate, setRotate] = useState({ x: 0, y: 0 });
+  const [hovered, setHovered] = useState(false);
+  const cardRef = useRef(null);
+
+  const handleMouseMove = (e) => {
+    const rect = cardRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    setRotate({
+      x: -(e.clientY - cy) / (rect.height / 2) * 10,
+      y:  (e.clientX - cx) / (rect.width  / 2) * 10,
+    });
+  };
+
+  return (
+    <div
+      className='mb-4'
+      style={{ perspective: '600px' }}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => { setHovered(false); setRotate({ x: 0, y: 0 }); }}>
+      <div
+        ref={cardRef}
+        style={{
+          transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg) ${hovered ? 'scale(1.03)' : 'scale(1)'}`,
+          transition: hovered
+            ? 'transform 0.12s ease-out'
+            : 'transform 0.5s cubic-bezier(0.23,1,0.32,1)',
+          transformStyle: 'preserve-3d',
+          background: 'linear-gradient(135deg, #1a1040 0%, #0d0d1a 60%, #1a0d2e 100%)',
+          boxShadow: hovered
+            ? '0 12px 32px rgba(99,70,224,0.35), 0 0 0 1px rgba(99,70,224,0.3)'
+            : '0 4px 16px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.06)',
+        }}
+        className='relative w-full rounded-2xl p-4 overflow-hidden cursor-default select-none'>
+
+        {/* Shimmer stripe */}
+        <div className='absolute inset-0 pointer-events-none overflow-hidden rounded-2xl'>
+          <div
+            className='absolute -top-4 -left-4 w-24 h-24 rounded-full opacity-30'
+            style={{ background: 'radial-gradient(circle, #7c3aed 0%, transparent 70%)' }}
+          />
+          <div
+            className='absolute bottom-0 right-0 w-20 h-20 rounded-full opacity-20'
+            style={{ background: 'radial-gradient(circle, #6366f1 0%, transparent 70%)' }}
+          />
+          {/* Scan line */}
+          <div className='absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-400/50 to-transparent' />
+        </div>
+
+        {/* Initials orb */}
+        <div
+          className='w-10 h-10 rounded-xl flex items-center justify-center font-display font-bold text-[16px] mb-3'
+          style={{
+            background: 'linear-gradient(135deg, rgba(124,58,237,0.4) 0%, rgba(99,102,241,0.25) 100%)',
+            border: '1px solid rgba(124,58,237,0.5)',
+            color: '#c4b5fd',
+            boxShadow: '0 0 12px rgba(124,58,237,0.25)',
+          }}>
+          {initials || '?'}
+        </div>
+
+        {/* Label */}
+        <p className='text-[9px] tracking-[0.18em] uppercase text-violet-400/60 mb-0.5 font-medium'>Candidate</p>
+        <p className='font-display font-semibold text-[13px] text-white leading-tight truncate'>
+          {name || 'კანდიდატი'}
+        </p>
+        {headline && (
+          <p className='text-[10.5px] text-violet-300/50 mt-0.5 truncate'>{headline}</p>
+        )}
+
+        {/* Chip decoration */}
+        <div className='absolute bottom-3 right-3 flex flex-col gap-0.5 opacity-30'>
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className='flex gap-0.5'>
+              {[...Array(4)].map((_, j) => (
+                <div key={j} className='w-0.5 h-0.5 rounded-full bg-violet-400' />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -55,6 +144,14 @@ export default function ProfilePage() {
     category: 'OTHER',
   });
 
+  // CV Boxes state (employer)
+  const [myBoxes, setMyBoxes]               = useState([]);
+  const [selectedBox, setSelectedBox]       = useState(null);
+  const [boxSubmissions, setBoxSubmissions] = useState([]);
+  const [subCatFilter, setSubCatFilter]     = useState('ALL');
+  const [showBoxForm, setShowBoxForm]       = useState(false);
+  const [boxForm, setBoxForm]               = useState({ title: '', description: '', category: 'OTHER' });
+
   useEffect(() => {
     if (!user) { navigate('/login'); return; }
     api.get('/profiles/me').then(({ data }) => {
@@ -64,6 +161,9 @@ export default function ProfilePage() {
 
     if (user.role === 'EMPLOYER') {
       api.get('/jobs/mine').then(({ data }) => setJobs(data)).catch(() => {});
+      api.get('/profiles/me').then(({ data }) => {
+        if (data.id) api.get('/company-boxes/' + data.id).then(r => setMyBoxes(r.data)).catch(() => {});
+      }).catch(() => {});
     } else {
       api.get('/applications/mine').then(({ data }) => setApplications(data)).catch(() => {});
     }
@@ -124,6 +224,32 @@ export default function ProfilePage() {
     setJobs(data);
   };
 
+  const handleCreateBox = async (e) => {
+    e.preventDefault();
+    try {
+      const { data: newBox } = await api.post('/company-boxes', boxForm);
+      setMyBoxes(prev => [newBox, ...prev]);
+      setShowBoxForm(false);
+      setBoxForm({ title: '', description: '', category: 'OTHER' });
+      setMessage('CV Box დაემატა!');
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'შეცდომა');
+    }
+  };
+
+  const viewBoxSubmissions = async (box) => {
+    setSelectedBox(box);
+    setActivePanel('box-submissions');
+    setSubCatFilter('ALL');
+    const { data } = await api.get('/company-boxes/' + box.id + '/submissions');
+    setBoxSubmissions(data);
+  };
+
+  const toggleBoxActive = async (box) => {
+    const { data: updated } = await api.patch('/company-boxes/' + box.id, { isActive: !box.isActive });
+    setMyBoxes(prev => prev.map(b => b.id === box.id ? { ...b, isActive: updated.isActive } : b));
+  };
+
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -166,6 +292,7 @@ export default function ProfilePage() {
     ? [
         { key: 'jobs',       label: 'ჩემი ვაკანსიები', count: jobs.length },
         { key: 'applicants', label: 'განმცხადებლები',   count: null },
+        { key: 'cvboxes',    label: 'CV Boxes',          count: myBoxes.length || null },
         { key: 'analytics',  label: 'ანალიტიკა',        count: null },
         { key: 'settings',   label: 'პარამეტრები',       count: null },
       ]
@@ -187,30 +314,38 @@ export default function ProfilePage() {
 
             {/* Profile card */}
             <div className='px-5 pt-6 pb-5 border-b border-gray-100'>
-              <div className='relative w-fit mb-4'>
-                {profile?.avatarUrl && !avatarLoadError ? (
-                  <img
-                    src={assetUrl(profile.avatarUrl)}
-                    alt='avatar'
-                    onError={() => setAvatarLoadError(true)}
-                    className='w-12 h-12 rounded-full object-cover border border-gray-100'
-                  />
-                ) : (
-                  <div className='w-12 h-12 rounded-full bg-brand-50 border border-brand-100 flex items-center justify-center font-display font-semibold text-brand-600 text-[15px]'>
-                    {initials}
-                  </div>
-                )}
-                <label className='absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-brand-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-brand-700 transition-colors duration-150 shadow-sm'>
-                  <input type='file' accept='.jpg,.jpeg,.png,.webp' className='hidden' onChange={handleAvatarUpload} />
-                  <svg width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2.5'>
-                    <path d='M12 5v14M5 12h14'/>
-                  </svg>
-                </label>
-              </div>
-              <p className='font-semibold text-[13.5px] text-gray-900 leading-tight'>{displayName || '—'}</p>
-              <p className='text-[11.5px] text-gray-400 mt-0.5'>
-                {user?.role === 'EMPLOYER' ? 'დამსაქმებელი' : 'კანდიდატი'}
-              </p>
+              {user?.role === 'CANDIDATE' ? (
+                /* ── 3D Identity Card for candidates ── */
+                <CandidateIdentityCard initials={initials} name={displayName} headline={profile?.headline} />
+              ) : (
+                /* ── Employer avatar (unchanged) ── */
+                <div className='relative w-fit mb-4'>
+                  {profile?.avatarUrl && !avatarLoadError ? (
+                    <img
+                      src={assetUrl(profile.avatarUrl)}
+                      alt='avatar'
+                      onError={() => setAvatarLoadError(true)}
+                      className='w-12 h-12 rounded-full object-cover border border-gray-100'
+                    />
+                  ) : (
+                    <div className='w-12 h-12 rounded-full bg-brand-50 border border-brand-100 flex items-center justify-center font-display font-semibold text-brand-600 text-[15px]'>
+                      {initials}
+                    </div>
+                  )}
+                  <label className='absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-brand-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-brand-700 transition-colors duration-150 shadow-sm'>
+                    <input type='file' accept='.jpg,.jpeg,.png,.webp' className='hidden' onChange={handleAvatarUpload} />
+                    <svg width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2.5'>
+                      <path d='M12 5v14M5 12h14'/>
+                    </svg>
+                  </label>
+                </div>
+              )}
+              {user?.role === 'EMPLOYER' && (
+                <>
+                  <p className='font-semibold text-[13.5px] text-gray-900 leading-tight'>{displayName || '—'}</p>
+                  <p className='text-[11.5px] text-gray-400 mt-0.5'>დამსაქმებელი</p>
+                </>
+              )}
             </div>
 
             {/* Navigation */}
@@ -497,6 +632,175 @@ export default function ProfilePage() {
                 {selectedJob && applicants.length === 0 && (
                   <div className='bg-white border border-gray-100 rounded-xl text-center py-14 text-[13px] text-gray-400'>
                     განმცხადებელი ჯერ არ არის
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ════ EMPLOYER: CV Boxes ════════════════════════ */}
+          {activePanel === 'cvboxes' && user?.role === 'EMPLOYER' && (
+            <div>
+              <div className='flex items-center justify-between mb-4'>
+                <p className='font-semibold text-[14px] text-gray-900'>CV Boxes</p>
+                <button
+                  onClick={() => setShowBoxForm(!showBoxForm)}
+                  className={'text-[12.5px] font-medium px-3.5 py-1.5 rounded-lg transition-colors duration-150 ' +
+                    (showBoxForm ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' : 'bg-brand-600 hover:bg-brand-700 text-white')}>
+                  {showBoxForm ? 'გაუქმება' : '+ ახალი Box'}
+                </button>
+              </div>
+
+              {showBoxForm && (
+                <form onSubmit={handleCreateBox} className='bg-white border border-gray-100 rounded-2xl p-6 mb-4 space-y-3.5'>
+                  <div>
+                    <label className='text-[11.5px] text-gray-500 block mb-1.5 font-medium'>სათაური *</label>
+                    <input required placeholder='მაგ: ვეძებთ React Developer-ს' value={boxForm.title}
+                      onChange={e => setBoxForm(p => ({ ...p, title: e.target.value }))}
+                      className={INPUT} />
+                  </div>
+                  <div>
+                    <label className='text-[11.5px] text-gray-500 block mb-1.5 font-medium'>აღწერა</label>
+                    <textarea placeholder='დამატებითი ინფორმაცია...' value={boxForm.description} rows={3}
+                      onChange={e => setBoxForm(p => ({ ...p, description: e.target.value }))}
+                      className={TEXTAREA} />
+                  </div>
+                  <div>
+                    <label className='text-[11.5px] text-gray-500 block mb-1.5 font-medium'>კატეგორია</label>
+                    <select value={boxForm.category} onChange={e => setBoxForm(p => ({ ...p, category: e.target.value }))}
+                      className={SELECT_CLS + ' w-full'}>
+                      <option value='IT'>IT და ტექნოლოგია</option>
+                      <option value='SALES'>გაყიდვები</option>
+                      <option value='MARKETING'>მარკეტინგი</option>
+                      <option value='FINANCE'>ფინანსები</option>
+                      <option value='DESIGN'>დიზაინი</option>
+                      <option value='MANAGEMENT'>მენეჯმენტი</option>
+                      <option value='LOGISTICS'>ლოჯისტიკა</option>
+                      <option value='HEALTHCARE'>მედიცინა</option>
+                      <option value='EDUCATION'>განათლება</option>
+                      <option value='HOSPITALITY'>სტუმართმოყვარეობა</option>
+                      <option value='OTHER'>სხვა</option>
+                    </select>
+                  </div>
+                  <button type='submit' className='h-10 px-6 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-[13px] font-medium transition-colors duration-150'>
+                    შექმნა
+                  </button>
+                </form>
+              )}
+
+              <div className='flex flex-col gap-2'>
+                {myBoxes.map(box => (
+                  <div key={box.id} className='bg-white border border-gray-100 rounded-xl px-5 py-4 flex items-center gap-4'>
+                    <div className='flex-1 min-w-0'>
+                      <div className='flex items-center gap-2 mb-0.5'>
+                        <p className='font-medium text-[13.5px] text-gray-900 truncate'>{box.title}</p>
+                        <span className={'text-[10px] px-1.5 py-0.5 rounded-md border font-medium flex-shrink-0 ' +
+                          (box.isActive ? 'bg-teal-50 text-teal-700 border-teal-200' : 'bg-gray-100 text-gray-400 border-gray-200')}>
+                          {box.isActive ? 'აქტიური' : 'გათიშული'}
+                        </span>
+                        {box.category && box.category !== 'OTHER' && (
+                          <span className='text-[10px] px-1.5 py-0.5 rounded-md border border-brand-100 bg-brand-50 text-brand-600 flex-shrink-0'>
+                            {box.category}
+                          </span>
+                        )}
+                      </div>
+                      <p className='text-[12px] text-gray-400'>
+                        {box._count?.submissions ?? 0} CV გამოგზავნილი
+                      </p>
+                    </div>
+                    <div className='flex items-center gap-3 flex-shrink-0'>
+                      <button onClick={() => viewBoxSubmissions(box)}
+                        className='text-[12px] text-brand-600 hover:text-brand-700 font-medium transition-colors duration-150'>
+                        CV-ები
+                      </button>
+                      <button onClick={() => toggleBoxActive(box)}
+                        className='text-[12px] text-gray-400 hover:text-gray-600 transition-colors duration-150'>
+                        {box.isActive ? 'გათიშვა' : 'გააქტიურება'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {myBoxes.length === 0 && (
+                  <div className='bg-white border border-gray-100 rounded-xl text-center py-14'>
+                    <p className='text-[13px] text-gray-400 mb-1'>CV Box ჯერ არ გაქვთ</p>
+                    <button onClick={() => setShowBoxForm(true)}
+                      className='text-[12.5px] text-brand-600 hover:underline font-medium'>
+                      + პირველი Box-ის შექმნა
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ════ EMPLOYER: Box Submissions ══════════════════ */}
+          {activePanel === 'box-submissions' && user?.role === 'EMPLOYER' && (
+            <div>
+              <div className='flex items-center justify-between mb-5'>
+                <div>
+                  <p className='font-semibold text-[14px] text-gray-900'>
+                    {selectedBox ? selectedBox.title : 'CV-ები'}
+                  </p>
+                  {selectedBox && (
+                    <p className='text-[12px] text-gray-400 mt-0.5'>
+                      {boxSubmissions.length} CV გამოგზავნილი
+                    </p>
+                  )}
+                </div>
+                <div className='flex items-center gap-2'>
+                  <select
+                    value={subCatFilter}
+                    onChange={e => setSubCatFilter(e.target.value)}
+                    className='h-8 text-[12px] bg-surface-50 border border-surface-200 rounded-lg px-2.5 focus:outline-none focus:border-brand-400 text-gray-600'>
+                    <option value='ALL'>ყველა</option>
+                    <option value='IT'>IT</option>
+                    <option value='SALES'>გაყიდვები</option>
+                    <option value='MARKETING'>მარკეტინგი</option>
+                    <option value='FINANCE'>ფინანსები</option>
+                    <option value='DESIGN'>დიზაინი</option>
+                    <option value='MANAGEMENT'>მენეჯმენტი</option>
+                    <option value='OTHER'>სხვა</option>
+                  </select>
+                  <button
+                    onClick={() => setActivePanel('cvboxes')}
+                    className='inline-flex items-center gap-1.5 text-[12.5px] text-gray-400 hover:text-gray-700 transition-colors duration-150'>
+                    <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+                      <path d='M19 12H5M12 19l-7-7 7-7'/>
+                    </svg>
+                    უკან
+                  </button>
+                </div>
+              </div>
+
+              <div className='flex flex-col gap-2'>
+                {boxSubmissions
+                  .filter(s => subCatFilter === 'ALL' || (selectedBox?.category || 'OTHER') === subCatFilter)
+                  .map(sub => (
+                  <div key={sub.id} className='bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-3.5'>
+                    <div className='w-9 h-9 rounded-full bg-surface-100 flex items-center justify-center text-[12px] font-semibold text-gray-500 flex-shrink-0 border border-gray-100'>
+                      {sub.candidateName.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className='flex-1 min-w-0'>
+                      <p className='text-[13.5px] font-medium text-gray-900'>{sub.candidateName}</p>
+                      <p className='text-[12px] text-gray-400 mt-0.5'>{sub.candidateEmail}</p>
+                      {sub.message && (
+                        <p className='text-[11.5px] text-gray-400 mt-1 truncate'>&ldquo;{sub.message}&rdquo;</p>
+                      )}
+                      <p className='text-[11px] text-gray-300 mt-0.5'>
+                        {new Date(sub.submittedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    {sub.cvUrl && (
+                      <a href={sub.cvUrl} target='_blank' rel='noreferrer'
+                        className='flex-shrink-0 text-[12px] font-medium text-brand-600 hover:underline'>
+                        CV ↗
+                      </a>
+                    )}
+                  </div>
+                ))}
+                {boxSubmissions.length === 0 && (
+                  <div className='bg-white border border-gray-100 rounded-xl text-center py-14 text-[13px] text-gray-400'>
+                    CV ჯერ არ არის გამოგზავნილი
                   </div>
                 )}
               </div>

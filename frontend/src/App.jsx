@@ -8,8 +8,9 @@ import LoginPage     from './pages/LoginPage';
 import RegisterPage  from './pages/RegisterPage';
 import JobsPage      from './pages/JobsPage';
 import JobDetailPage from './pages/JobDetailPage';
-import ProfilePage   from './pages/ProfilePage';
-import CompanyPage   from './pages/CompanyPage';
+import ProfilePage    from './pages/ProfilePage';
+import CompanyPage    from './pages/CompanyPage';
+import SavedJobsPage  from './pages/SavedJobsPage';
 
 function PrivateRoute({ children }) {
   const { user } = useAuth();
@@ -31,6 +32,7 @@ function AppContent() {
           <Route path='/register'    element={<RegisterPage />} />
           <Route path='/companies/:slug' element={<CompanyPage />} />
           <Route path='/profile'     element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+          <Route path='/saved'       element={<PrivateRoute><SavedJobsPage /></PrivateRoute>} />
         </Routes>
       </BrowserRouter>
     </>

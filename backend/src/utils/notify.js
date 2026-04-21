@@ -10,7 +10,8 @@ const sendNotification = async (app, userId, message) => {
 
   const io          = app.get('io');
   const onlineUsers = app.get('onlineUsers');
-  const socketId    = onlineUsers?.get(userId);
+  const socketId    = onlineUsers?.get(+userId); // coerce to number to match registration
+  console.log('[notify] userId:', +userId, '| socketId:', socketId, '| onlineUsers:', onlineUsers?.size);
 
   if (io && socketId) {
     io.to(socketId).emit('notification', {

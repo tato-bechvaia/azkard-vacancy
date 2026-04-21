@@ -11,6 +11,7 @@ const profileRoutes      = require('./routes/profile.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const companyBoxRoutes   = require('./routes/companyBox.routes');
 const chatRoutes         = require('./routes/chat.routes');
+const savedJobsRoutes    = require('./routes/savedJobs.routes');
 const { errorHandler }   = require('./middleware/error.middleware');
 const { expandAssetUrlsInJson, defaultBase } = require('./utils/publicUrl');
 
@@ -46,6 +47,7 @@ app.use('/api/profiles',      profileRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/company-boxes', companyBoxRoutes);
 app.use('/api/chat',         chatRoutes);
+app.use('/api/saved-jobs',  savedJobsRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 app.use(errorHandler);

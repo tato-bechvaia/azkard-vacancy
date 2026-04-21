@@ -42,12 +42,12 @@ const createBox = async (req, res, next) => {
       .maybeSingle();
     if (!employer) return res.status(404).json({ message: 'Employer profile not found' });
 
-    const { title, description } = req.body;
+    const { title, description, category } = req.body;
     if (!title?.trim()) return res.status(400).json({ message: 'სათაური სავალდებულოა' });
 
     const { data: box, error } = await supabase
       .from('company_boxes')
-      .insert({ company_id: employer.id, title: title.trim(), description: description?.trim() || null })
+      .insert({ company_id: employer.id, title: title.trim(), description: description?.trim() || null, category: category || 'OTHER' })
       .select()
       .single();
     if (error) throw error;
@@ -56,6 +56,7 @@ const createBox = async (req, res, next) => {
     res.status(201).json({
       id: box.id, companyId: box.company_id, title: box.title,
       description: box.description, isActive: box.is_active, createdAt: box.created_at,
+      category: box.category || 'OTHER',
     });
   } catch (err) { next(err); }
 };
@@ -84,6 +85,7 @@ const listAllBoxes = async (req, res, next) => {
       description: b.description,
       isActive: b.is_active,
       createdAt: b.created_at,
+      category: b.category || 'OTHER',
       employer: b.employer_profiles ? {
         companyName: b.employer_profiles.company_name,
         avatarUrl: b.employer_profiles.avatar_url,
@@ -118,6 +120,7 @@ const listBoxes = async (req, res, next) => {
       description: b.description,
       isActive: b.is_active,
       createdAt: b.created_at,
+      category: b.category || 'OTHER',
       employer: b.employer_profiles ? {
         companyName: b.employer_profiles.company_name,
         avatarUrl: b.employer_profiles.avatar_url,
@@ -220,13 +223,14 @@ const updateBox = async (req, res, next) => {
     if (!box) return res.status(404).json({ message: 'CV Box ვერ მოიძებნა' });
     if (box.company_id !== employer.id) return res.status(403).json({ message: 'Forbidden' });
 
-    const { title, description, isActive } = req.body;
+    const { title, description, isActive, category } = req.body;
     const { data: updated, error } = await supabase
       .from('company_boxes')
       .update({
         ...(title !== undefined && { title: title.trim() }),
         ...(description !== undefined && { description: description?.trim() || null }),
         ...(isActive !== undefined && { is_active: Boolean(isActive) }),
+        ...(category !== undefined && { category }),
       })
       .eq('id', box.id)
       .select()
@@ -237,6 +241,7 @@ const updateBox = async (req, res, next) => {
     res.json({
       id: updated.id, companyId: updated.company_id, title: updated.title,
       description: updated.description, isActive: updated.is_active, createdAt: updated.created_at,
+      category: updated.category || 'OTHER',
     });
   } catch (err) { next(err); }
 };

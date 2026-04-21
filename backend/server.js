@@ -17,14 +17,18 @@ const io = new Server(server, {
 const onlineUsers = new Map();
 
 io.on('connection', (socket) => {
+  console.log('[socket] connected:', socket.id);
+
   socket.on('register', (userId) => {
-    onlineUsers.set(userId, socket.id);
+    onlineUsers.set(+userId, socket.id);
+    console.log('[socket] registered userId:', +userId, '→', socket.id, '| online:', onlineUsers.size);
   });
 
   socket.on('disconnect', () => {
     for (const [userId, socketId] of onlineUsers.entries()) {
       if (socketId === socket.id) {
         onlineUsers.delete(userId);
+        console.log('[socket] disconnected userId:', userId);
         break;
       }
     }
