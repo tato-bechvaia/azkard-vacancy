@@ -3,13 +3,17 @@ const { getMyProfile, updateMyProfile } = require('../controllers/profile.contro
 const { protect } = require('../middleware/auth.middleware');
 const upload   = require('../middleware/upload.middleware');
 const supabase = require('../supabase');
+const { uploadToStorage, deleteFromStorage } = require('../utils/storage');
 
 router.get('/me',  protect, getMyProfile);
 router.put('/me',  protect, updateMyProfile);
 
 router.post('/avatar', protect, upload.single('avatar'), async (req, res, next) => {
   try {
-    const avatarUrl = '/uploads/' + req.file.filename;
+    const avatarUrl = await uploadToStorage(
+      'avatars', 'avatar',
+      req.file.buffer, req.file.originalname, req.file.mimetype
+    );
 
     if (req.user.role === 'CANDIDATE') {
       await supabase.from('candidate_profiles').update({ avatar_url: avatarUrl }).eq('user_id', req.user.id);
@@ -21,9 +25,28 @@ router.post('/avatar', protect, upload.single('avatar'), async (req, res, next) 
   } catch (err) { next(err); }
 });
 
+router.delete('/avatar', protect, async (req, res, next) => {
+  try {
+    const table = req.user.role === 'CANDIDATE' ? 'candidate_profiles' : 'employer_profiles';
+    const { data: profile, error: fetchErr } = await supabase
+      .from(table).select('avatar_url').eq('user_id', req.user.id).maybeSingle();
+    if (fetchErr) throw fetchErr;
+
+    if (profile?.avatar_url) {
+      await deleteFromStorage('avatars', profile.avatar_url).catch(() => {});
+      await supabase.from(table).update({ avatar_url: null }).eq('user_id', req.user.id);
+    }
+
+    res.json({ avatarUrl: null });
+  } catch (err) { next(err); }
+});
+
 router.post('/cv', protect, upload.single('cv'), async (req, res, next) => {
   try {
-    const cvUrl = '/uploads/' + req.file.filename;
+    const cvUrl = await uploadToStorage(
+      'cvs', 'cv',
+      req.file.buffer, req.file.originalname, req.file.mimetype
+    );
     await supabase.from('candidate_profiles').update({ cv_url: cvUrl }).eq('user_id', req.user.id);
     res.json({ cvUrl });
   } catch (err) { next(err); }

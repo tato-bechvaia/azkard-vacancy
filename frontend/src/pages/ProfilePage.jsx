@@ -248,6 +248,17 @@ export default function ProfilePage() {
     setMyBoxes(prev => prev.map(b => b.id === box.id ? { ...b, isActive: updated.isActive } : b));
   };
 
+  const handleAvatarDelete = async () => {
+    try {
+      await api.delete('/profiles/avatar');
+      setProfile(p => ({ ...p, avatarUrl: null }));
+      setAvatarLoadError(false);
+      setMessage('ფოტო წაიშალა');
+    } catch {
+      setMessage('ფოტოს წაშლა ვერ მოხერხდა');
+    }
+  };
+
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -336,6 +347,16 @@ export default function ProfilePage() {
                       <path d='M12 5v14M5 12h14'/>
                     </svg>
                   </label>
+                  {profile?.avatarUrl && !avatarLoadError && (
+                    <button
+                      onClick={handleAvatarDelete}
+                      title='ფოტოს წაშლა'
+                      className='absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors duration-150 shadow-sm'>
+                      <svg width='7' height='7' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='3'>
+                        <path d='M18 6 6 18M6 6l12 12'/>
+                      </svg>
+                    </button>
+                  )}
                 </div>
               )}
               {user?.role === 'EMPLOYER' && (

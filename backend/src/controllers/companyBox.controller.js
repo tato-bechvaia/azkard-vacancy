@@ -1,30 +1,19 @@
 const supabase = require('../supabase');
 const cache = require('../utils/cache');
 const { sendNotification } = require('../utils/notify');
+const { uploadToStorage } = require('../utils/storage');
 const { z } = require('zod');
-const path = require('path');
-const fs = require('fs');
+const path   = require('path');
 const multer = require('multer');
 
-// ── Anonymous CV upload — no req.user dependency ──────────────────────────
-const cvUploadsDir = path.join(__dirname, '../../uploads/cv-boxes');
-if (!fs.existsSync(cvUploadsDir)) fs.mkdirSync(cvUploadsDir, { recursive: true });
-
-const cvStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, cvUploadsDir),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, 'cvbox-' + Date.now() + '-' + Math.random().toString(36).slice(2) + ext);
-  },
-});
-
+// ── Anonymous CV upload — memory storage, uploaded to Supabase Storage ───
 const cvFileFilter = (_req, file, cb) => {
   const allowed = ['.pdf', '.doc', '.docx'];
   if (allowed.includes(path.extname(file.originalname).toLowerCase())) cb(null, true);
   else cb(new Error('მხოლოდ PDF და Word ფაილები დასაშვებია'));
 };
 
-const cvUpload = multer({ storage: cvStorage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: cvFileFilter });
+const cvUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: cvFileFilter });
 
 const VALID_CATEGORIES = ['IT','SALES','MARKETING','FINANCE','DESIGN','MANAGEMENT','LOGISTICS','HEALTHCARE','EDUCATION','HOSPITALITY','OTHER'];
 
@@ -160,12 +149,14 @@ const submitCV = async (req, res, next) => {
 
     const parsed = submissionSchema.safeParse(req.body);
     if (!parsed.success) {
-      fs.unlinkSync(req.file.path);
       return res.status(400).json({ message: parsed.error.issues[0].message });
     }
 
     const { candidateName, candidateEmail, message, categories } = parsed.data;
-    const cvUrl = '/uploads/cv-boxes/' + req.file.filename;
+    const cvUrl = await uploadToStorage(
+      'cv-submissions', 'cvbox',
+      req.file.buffer, req.file.originalname, req.file.mimetype
+    );
 
     const { data: submission, error } = await supabase
       .from('cv_submissions')
