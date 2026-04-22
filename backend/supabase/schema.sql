@@ -118,6 +118,7 @@ CREATE TABLE cv_submissions (
   candidate_email  TEXT NOT NULL,
   cv_url           TEXT NOT NULL,
   message          TEXT,
+  categories       TEXT[]  DEFAULT '{}',
   submitted_at     TIMESTAMPTZ DEFAULT NOW()
 );
 

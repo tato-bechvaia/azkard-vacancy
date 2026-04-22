@@ -25,11 +25,23 @@ const cvFileFilter = (_req, file, cb) => {
 
 const cvUpload = multer({ storage: cvStorage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: cvFileFilter });
 
+const VALID_CATEGORIES = ['IT','SALES','MARKETING','FINANCE','DESIGN','MANAGEMENT','LOGISTICS','HEALTHCARE','EDUCATION','HOSPITALITY','OTHER'];
+
 // ── Zod schema for submission ─────────────────────────────────────────────
 const submissionSchema = z.object({
   candidateName:  z.string().min(2, 'სახელი მოკლეა').max(120),
   candidateEmail: z.string().email('ელ-ფოსტა არასწორია'),
   message:        z.string().max(1000).optional(),
+  categories: z.preprocess(
+    (v) => {
+      if (Array.isArray(v)) return v;
+      if (typeof v === 'string') {
+        try { return JSON.parse(v); } catch { return v ? [v] : []; }
+      }
+      return [];
+    },
+    z.array(z.enum(VALID_CATEGORIES)).max(3, 'მაქსიმუმ 3 კატეგორია').optional().default([])
+  ),
 });
 
 // ── POST /api/company-boxes ───────────────────────────────────────────────
@@ -148,7 +160,7 @@ const submitCV = async (req, res, next) => {
       return res.status(400).json({ message: parsed.error.issues[0].message });
     }
 
-    const { candidateName, candidateEmail, message } = parsed.data;
+    const { candidateName, candidateEmail, message, categories } = parsed.data;
     const cvUrl = '/uploads/cv-boxes/' + req.file.filename;
 
     const { data: submission, error } = await supabase
@@ -159,6 +171,7 @@ const submitCV = async (req, res, next) => {
         candidate_email: candidateEmail,
         cv_url: cvUrl,
         message: message || null,
+        categories: categories || [],
       })
       .select()
       .single();
@@ -186,11 +199,19 @@ const listSubmissions = async (req, res, next) => {
     if (!box) return res.status(404).json({ message: 'CV Box ვერ მოიძებნა' });
     if (box.company_id !== employer.id) return res.status(403).json({ message: 'Forbidden' });
 
-    const { data: submissions, error } = await supabase
+    let query = supabase
       .from('cv_submissions')
       .select('*')
       .eq('company_box_id', box.id)
       .order('submitted_at', { ascending: false });
+
+    // Optional server-side category filter
+    const { category } = req.query;
+    if (category && category !== 'ALL') {
+      query = query.contains('categories', [category]);
+    }
+
+    const { data: submissions, error } = await query;
     if (error) throw error;
 
     res.json((submissions || []).map(s => ({
@@ -200,6 +221,7 @@ const listSubmissions = async (req, res, next) => {
       candidateEmail: s.candidate_email,
       cvUrl: s.cv_url,
       message: s.message,
+      categories: s.categories || [],
       submittedAt: s.submitted_at,
     })));
   } catch (err) { next(err); }

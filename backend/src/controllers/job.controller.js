@@ -177,6 +177,9 @@ const getJob = async (req, res, next) => {
     const cached = cache.get(cacheKey);
     if (cached) return res.json(cached);
 
+    const jobId = +req.params.id;
+    const now = new Date();
+
     const { data: job, error } = await supabase
       .from('jobs')
       .select(`
@@ -187,16 +190,45 @@ const getJob = async (req, res, next) => {
         ),
         applications(count)
       `)
-      .eq('id', +req.params.id)
+      .eq('id', jobId)
       .maybeSingle();
 
     if (error) throw error;
     if (!job) return res.status(404).json({ message: 'ვაკანსია ვერ მოიძებნა' });
 
-    // Increment view count
-    await supabase.from('jobs').update({ views: (job.views || 0) + 1 }).eq('id', +req.params.id);
+    // Increment view count (fire and forget)
+    supabase.from('jobs').update({ views: (job.views || 0) + 1 }).eq('id', jobId).then(() => {});
 
-    const formatted = { ...formatJob(job), expiresAt: effectiveExpiry(formatJob(job)) };
+    const employerProfileId = job.employer_profile_id;
+    const category = job.category;
+
+    // Fetch company's other active jobs + similar-category jobs in parallel
+    const [{ data: companyRaw }, { data: similarRaw }] = await Promise.all([
+      applyActiveFilter(
+        supabase.from('jobs').select(EMPLOYER_SELECT), now
+      )
+        .eq('employer_profile_id', employerProfileId)
+        .neq('id', jobId)
+        .order('created_at', { ascending: false })
+        .limit(12),
+
+      category
+        ? applyActiveFilter(
+            supabase.from('jobs').select(EMPLOYER_SELECT), now
+          )
+            .eq('category', category)
+            .neq('id', jobId)
+            .order('views', { ascending: false })
+            .limit(12)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    const formatted = {
+      ...formatJob(job),
+      expiresAt: effectiveExpiry(formatJob(job)),
+      companyJobs:  withExpiry((companyRaw  || []).map(formatJob)),
+      similarJobs:  withExpiry((similarRaw  || []).map(formatJob)),
+    };
     cache.set(cacheKey, formatted, 30);
     res.json(formatted);
   } catch (err) { next(err); }

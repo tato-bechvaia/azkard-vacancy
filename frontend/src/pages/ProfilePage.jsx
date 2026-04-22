@@ -30,6 +30,8 @@ const STATUS_GEO = {
   HIRED:       'აყვანილია',
 };
 
+const CAT_LABEL_GEO = { IT:'IT', SALES:'გაყიდვები', MARKETING:'მარკეტინგი', FINANCE:'ფინანსები', DESIGN:'დიზაინი', MANAGEMENT:'მენეჯმენტი', LOGISTICS:'ლოჯისტიკა', HEALTHCARE:'მედიცინა', EDUCATION:'განათლება', HOSPITALITY:'სტუმართმოყვარეობა', OTHER:'სხვა' };
+
 const INPUT = 'w-full h-10 bg-surface-50 border border-surface-200 rounded-lg px-3 text-[13px] text-gray-800 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100/60 transition-all duration-150 placeholder-gray-400';
 const TEXTAREA = 'w-full bg-surface-50 border border-surface-200 rounded-lg px-3 py-2.5 text-[13px] text-gray-800 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100/60 transition-all duration-150 resize-none placeholder-gray-400';
 const SELECT_CLS = 'h-10 bg-surface-50 border border-surface-200 rounded-lg px-3 text-[13px] text-gray-700 focus:outline-none focus:border-brand-400 transition-colors duration-150';
@@ -774,7 +776,7 @@ export default function ProfilePage() {
 
               <div className='flex flex-col gap-2'>
                 {boxSubmissions
-                  .filter(s => subCatFilter === 'ALL' || (selectedBox?.category || 'OTHER') === subCatFilter)
+                  .filter(s => subCatFilter === 'ALL' || (s.categories || []).includes(subCatFilter))
                   .map(sub => (
                   <div key={sub.id} className='bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-3.5'>
                     <div className='w-9 h-9 rounded-full bg-surface-100 flex items-center justify-center text-[12px] font-semibold text-gray-500 flex-shrink-0 border border-gray-100'>
@@ -783,6 +785,15 @@ export default function ProfilePage() {
                     <div className='flex-1 min-w-0'>
                       <p className='text-[13.5px] font-medium text-gray-900'>{sub.candidateName}</p>
                       <p className='text-[12px] text-gray-400 mt-0.5'>{sub.candidateEmail}</p>
+                      {(sub.categories || []).length > 0 && (
+                        <div className='flex flex-wrap gap-1 mt-1.5'>
+                          {sub.categories.map(cat => (
+                            <span key={cat} className='inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-brand-50 text-brand-600 border border-brand-100'>
+                              {CAT_LABEL_GEO[cat] || cat}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       {sub.message && (
                         <p className='text-[11.5px] text-gray-400 mt-1 truncate'>&ldquo;{sub.message}&rdquo;</p>
                       )}

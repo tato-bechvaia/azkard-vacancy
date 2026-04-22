@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../store/AuthContext';
@@ -7,6 +7,80 @@ import CompanyAvatar from '../components/CompanyAvatar';
 
 const REGIME_LABELS = { REMOTE: 'დისტანციური', HYBRID: 'ჰიბრიდული', FULL_TIME: 'ადგილზე' };
 const EXP_LABELS    = { NONE: 'გამოცდილება არ სჭირდება', ONE_TO_THREE: '1–3 წელი', THREE_TO_FIVE: '3–5 წელი', FIVE_PLUS: '5+ წელი' };
+const CAT_LABELS    = { IT:'IT', SALES:'გაყიდვები', MARKETING:'მარკეტინგი', FINANCE:'ფინანსები', DESIGN:'დიზაინი', MANAGEMENT:'მენეჯმენტი', LOGISTICS:'ლოჯისტიკა', HEALTHCARE:'მედიცინა', EDUCATION:'განათლება', HOSPITALITY:'სტუმართმოყვარეობა', OTHER:'სხვა' };
+
+// ── Compact carousel job card ────────────────────────────────────────────────
+function CarouselCard({ job, onClick }) {
+  const regime = { REMOTE: 'დისტ.', HYBRID: 'ჰიბ.', FULL_TIME: 'ადგ.' };
+  const regimeDot = { REMOTE: '#2dd4bf', HYBRID: '#60a5fa', FULL_TIME: '#a78bfa' };
+  return (
+    <button
+      onClick={onClick}
+      className='flex-shrink-0 w-[220px] bg-white border border-gray-100 hover:border-gray-200 hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] rounded-2xl p-4 text-left transition-all duration-150 group'>
+      <div className='flex items-center gap-2.5 mb-3'>
+        <CompanyAvatar company={job.employer} size='sm' />
+        <p className='text-[11px] text-gray-400 font-medium truncate'>{job.employer?.companyName}</p>
+      </div>
+      <p className='font-semibold text-[13px] text-gray-900 leading-snug mb-2 line-clamp-2 group-hover:text-brand-600 transition-colors duration-150'>
+        {job.title}
+      </p>
+      <div className='flex items-center gap-2 flex-wrap'>
+        <span className='text-[11.5px] font-semibold text-gray-700'>
+          {job.salaryMin?.toLocaleString()}
+          {job.salaryMax ? '–' + job.salaryMax.toLocaleString() : ''} ₾
+        </span>
+        {job.jobRegime && (
+          <span className='inline-flex items-center gap-1 text-[10.5px] text-gray-400'>
+            <span className='w-1.5 h-1.5 rounded-full flex-shrink-0' style={{ background: regimeDot[job.jobRegime] }} />
+            {regime[job.jobRegime]}
+          </span>
+        )}
+      </div>
+      {job.category && job.category !== 'OTHER' && (
+        <span className='mt-2 inline-block text-[10px] font-medium text-brand-500 bg-brand-50 border border-brand-100 px-2 py-0.5 rounded-full'>
+          {CAT_LABELS[job.category] || job.category}
+        </span>
+      )}
+    </button>
+  );
+}
+
+// ── Horizontal carousel section ──────────────────────────────────────────────
+function JobCarousel({ title, subtitle, jobs, onJobClick }) {
+  const ref = useRef(null);
+  const scroll = (dir) => {
+    if (ref.current) ref.current.scrollBy({ left: dir * 240, behavior: 'smooth' });
+  };
+  if (!jobs?.length) return null;
+  return (
+    <div className='mb-8'>
+      <div className='flex items-end justify-between mb-4'>
+        <div>
+          <p className='text-[10px] tracking-[0.18em] uppercase text-gray-400 mb-0.5'>{subtitle}</p>
+          <h3 className='font-display font-semibold text-[16px] text-gray-900 tracking-tight'>{title}</h3>
+        </div>
+        <div className='flex items-center gap-1.5'>
+          <button onClick={() => scroll(-1)}
+            className='w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-all duration-150'>
+            <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'><path d='M15 18l-6-6 6-6'/></svg>
+          </button>
+          <button onClick={() => scroll(1)}
+            className='w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-all duration-150'>
+            <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'><path d='M9 18l6-6-6-6'/></svg>
+          </button>
+        </div>
+      </div>
+      <div
+        ref={ref}
+        className='flex gap-3 overflow-x-auto pb-2'
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {jobs.map(j => (
+          <CarouselCard key={j.id} job={j} onClick={() => onJobClick(j.id)} />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 const REGIME_TAG = {
   REMOTE:    'bg-teal-50 text-teal-700 border-teal-100',
@@ -341,6 +415,25 @@ export default function JobDetailPage() {
           </div>
 
         </div>
+
+        {/* ── Carousels ──────────────────────────────────── */}
+        {(job.companyJobs?.length > 0 || job.similarJobs?.length > 0) && (
+          <div className='mt-10 border-t border-gray-100 pt-10'>
+            <JobCarousel
+              title={`${job.employer?.companyName}-ის სხვა ვაკანსიები`}
+              subtitle='კომპანია'
+              jobs={job.companyJobs}
+              onJobClick={(jid) => navigate('/jobs/' + jid)}
+            />
+            <JobCarousel
+              title='მსგავსი ვაკანსიები'
+              subtitle={CAT_LABELS[job.category] || 'კატეგორია'}
+              jobs={job.similarJobs}
+              onJobClick={(jid) => navigate('/jobs/' + jid)}
+            />
+          </div>
+        )}
+
       </div>
     </div>
   );

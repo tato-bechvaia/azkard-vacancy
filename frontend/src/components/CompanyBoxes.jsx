@@ -29,15 +29,39 @@ const CATEGORIES = [
 
 const CAT_LABEL = Object.fromEntries(CATEGORIES.slice(1).map(c => [c.value, c.label]));
 
+const SUBMISSION_CATS = [
+  { value: 'IT',          label: 'IT' },
+  { value: 'SALES',       label: 'გაყიდვები' },
+  { value: 'MARKETING',   label: 'მარკეტინგი' },
+  { value: 'FINANCE',     label: 'ფინანსები' },
+  { value: 'DESIGN',      label: 'დიზაინი' },
+  { value: 'MANAGEMENT',  label: 'მენეჯმენტი' },
+  { value: 'LOGISTICS',   label: 'ლოჯისტიკა' },
+  { value: 'HEALTHCARE',  label: 'მედიცინა' },
+  { value: 'EDUCATION',   label: 'განათლება' },
+  { value: 'HOSPITALITY', label: 'სტუმართმოყვარეობა' },
+  { value: 'OTHER',       label: 'სხვა' },
+];
+
 // ── CV Submission modal ──────────────────────────────────────────────────────
 function CVModal({ box, onClose }) {
-  const [name, setName]     = useState('');
-  const [email, setEmail]   = useState('');
-  const [msg, setMsg]       = useState('');
-  const [file, setFile]     = useState(null);
-  const [status, setStatus] = useState('idle'); // idle | loading | success | error
-  const [errMsg, setErrMsg] = useState('');
+  const [name, setName]           = useState('');
+  const [email, setEmail]         = useState('');
+  const [msg, setMsg]             = useState('');
+  const [file, setFile]           = useState(null);
+  const [selCats, setSelCats]     = useState([]);
+  const [catOpen, setCatOpen]     = useState(false);
+  const [status, setStatus]       = useState('idle'); // idle | loading | success | error
+  const [errMsg, setErrMsg]       = useState('');
   const fileRef = useRef(null);
+
+  const toggleCat = (val) => {
+    setSelCats(prev => {
+      if (prev.includes(val)) return prev.filter(c => c !== val);
+      if (prev.length >= 3) return prev; // max 3
+      return [...prev, val];
+    });
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -50,6 +74,7 @@ function CVModal({ box, onClose }) {
       fd.append('candidateEmail', email);
       fd.append('message', msg);
       fd.append('cv', file);
+      fd.append('categories', JSON.stringify(selCats));
       await api.post(`/company-boxes/${box.id}/submit`, fd);
       setStatus('success');
     } catch (err) {
@@ -111,6 +136,71 @@ function CVModal({ box, onClose }) {
                 placeholder='რამდენიმე სიტყვა შენს შესახებ...'
               />
             </div>
+            {/* Category multi-select (max 3) */}
+            <div className='relative'>
+              <label className='block text-[11px] text-gray-500 mb-1.5'>
+                სფერო (მაქს. 3)
+                {selCats.length > 0 && (
+                  <span className='ml-1.5 text-white/40'>{selCats.length}/3</span>
+                )}
+              </label>
+              {/* Trigger */}
+              <button
+                type='button'
+                onClick={() => setCatOpen(o => !o)}
+                className='w-full h-9 bg-white/[0.05] border border-white/[0.08] rounded-lg px-3 text-[12.5px] text-left flex items-center justify-between transition-colors hover:border-white/20'
+                style={{ color: selCats.length ? '#e5e7eb' : '#4B5563' }}>
+                <span className='truncate'>
+                  {selCats.length === 0
+                    ? 'კატეგორიის არჩევა...'
+                    : selCats.map(v => SUBMISSION_CATS.find(c => c.value === v)?.label).join(', ')}
+                </span>
+                <svg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='#6B7280' strokeWidth='2'
+                  style={{ transform: catOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s', flexShrink: 0, marginLeft: '6px' }}>
+                  <polyline points='6 9 12 15 18 9'/>
+                </svg>
+              </button>
+              {/* Dropdown */}
+              {catOpen && (
+                <div className='absolute z-10 left-0 right-0 mt-1 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden'>
+                  <div className='flex flex-wrap gap-1.5 p-2.5'>
+                    {SUBMISSION_CATS.map(c => {
+                      const active = selCats.includes(c.value);
+                      const disabled = !active && selCats.length >= 3;
+                      return (
+                        <button
+                          key={c.value}
+                          type='button'
+                          disabled={disabled}
+                          onClick={() => toggleCat(c.value)}
+                          className='px-2.5 py-1 rounded-full text-[11.5px] font-medium transition-all duration-100'
+                          style={{
+                            background: active ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)',
+                            border: `1px solid ${active ? 'rgba(99,102,241,0.5)' : 'rgba(255,255,255,0.08)'}`,
+                            color: active ? '#a5b4fc' : disabled ? '#374151' : '#9CA3AF',
+                            cursor: disabled ? 'not-allowed' : 'pointer',
+                          }}>
+                          {active && <span className='mr-1'>✓</span>}
+                          {c.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className='px-3 pb-2.5 flex justify-between items-center'>
+                    <span className='text-[10.5px] text-gray-600'>
+                      {selCats.length === 3 ? 'მაქსიმუმი მიღწეულია' : `კიდევ ${3 - selCats.length} შეგიძლია`}
+                    </span>
+                    <button
+                      type='button'
+                      onClick={() => setCatOpen(false)}
+                      className='text-[11px] text-gray-500 hover:text-white transition-colors px-2 py-0.5 rounded'>
+                      დახურვა
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div>
               <label className='block text-[11px] text-gray-500 mb-1.5'>CV ფაილი (PDF/Word) *</label>
               <div
