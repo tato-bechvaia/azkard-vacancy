@@ -12,22 +12,6 @@ const BOX_COLORS = [
   { bg: '#2e1e10', accent: '#f97316', glow: 'rgba(249,115,22,0.22)' },
 ];
 
-const CATEGORIES = [
-  { value: 'ALL',          label: 'ყველა' },
-  { value: 'IT',           label: 'IT' },
-  { value: 'SALES',        label: 'გაყიდვები' },
-  { value: 'MARKETING',    label: 'მარკეტინგი' },
-  { value: 'FINANCE',      label: 'ფინანსები' },
-  { value: 'DESIGN',       label: 'დიზაინი' },
-  { value: 'MANAGEMENT',   label: 'მენეჯმენტი' },
-  { value: 'LOGISTICS',    label: 'ლოჯისტიკა' },
-  { value: 'HEALTHCARE',   label: 'მედიცინა' },
-  { value: 'EDUCATION',    label: 'განათლება' },
-  { value: 'HOSPITALITY',  label: 'სტუმართმოყვარეობა' },
-  { value: 'OTHER',        label: 'სხვა' },
-];
-
-const CAT_LABEL = Object.fromEntries(CATEGORIES.slice(1).map(c => [c.value, c.label]));
 
 const SUBMISSION_CATS = [
   { value: 'IT',          label: 'IT' },
@@ -91,8 +75,8 @@ function CVModal({ box, onClose }) {
         {/* Header */}
         <div className='flex items-center justify-between px-6 pt-5 pb-4 border-b border-white/[0.07]'>
           <div>
-            <p className='text-[10px] text-gray-500 uppercase tracking-widest mb-1'>{box.employer?.companyName}</p>
-            <h3 className='font-display font-semibold text-white text-[15px]'>{box.title}</h3>
+            <h3 className='font-display font-semibold text-white text-[15px]'>{box.employer?.companyName}</h3>
+            <p className='text-[11px] text-gray-500 mt-0.5'>CV გაგზავნა</p>
           </div>
           <button onClick={onClose} className='w-8 h-8 flex items-center justify-center rounded-lg border border-white/10 text-gray-500 hover:text-white hover:border-white/20 transition-all'>
             <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5'><path d='M18 6 6 18M6 6l12 12'/></svg>
@@ -311,30 +295,14 @@ function CompanyBox({ box, colorScheme, index: idx }) {
           </div>
 
           {/* Company name */}
-          <p className='text-[10.5px] font-medium tracking-widest uppercase mb-1' style={{ color: colorScheme.accent }}>
+          <p className='text-[10.5px] font-medium tracking-widest uppercase mb-2' style={{ color: colorScheme.accent }}>
             {box.employer?.companyName}
           </p>
 
-          {/* Box title */}
-          <h3 className='font-display font-semibold text-[14px] text-white leading-snug mb-2 line-clamp-2'>
-            {box.title}
+          {/* Fixed tagline */}
+          <h3 className='font-display font-semibold text-[15px] text-white leading-snug mb-3'>
+            Drop your CV here
           </h3>
-
-          {/* Description */}
-          {box.description && (
-            <p className='text-[11.5px] text-gray-500 leading-relaxed mb-3 line-clamp-2'>
-              {box.description}
-            </p>
-          )}
-
-          {/* Category badge */}
-          {box.category && box.category !== 'OTHER' && (
-            <div
-              className='inline-flex items-center text-[9.5px] font-medium px-2 py-0.5 rounded-full mb-3'
-              style={{ background: `${colorScheme.accent}18`, color: colorScheme.accent, border: `1px solid ${colorScheme.accent}30` }}>
-              {CAT_LABEL[box.category] || box.category}
-            </div>
-          )}
 
           {/* CTA */}
           <div
@@ -365,9 +333,8 @@ function CompanyBox({ box, colorScheme, index: idx }) {
 
 // ── Section wrapper ──────────────────────────────────────────────────────────
 export default function CompanyBoxes() {
-  const [boxes, setBoxes]           = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [activeCategory, setActive] = useState('ALL');
+  const [boxes, setBoxes]     = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api.get('/company-boxes')
@@ -379,42 +346,25 @@ export default function CompanyBoxes() {
   if (loading) return null;
   if (!boxes.length) return null;
 
-  // Only show filter tabs for categories that actually have boxes
-  const presentCats = ['ALL', ...new Set(boxes.map(b => b.category || 'OTHER'))];
-  const filterTabs = CATEGORIES.filter(c => presentCats.includes(c.value));
-
-  const visible = activeCategory === 'ALL'
-    ? boxes
-    : boxes.filter(b => (b.category || 'OTHER') === activeCategory);
+  // One box per company — keep the first (most recent) for each companyId
+  const seen = new Set();
+  const visible = boxes.filter(b => {
+    if (seen.has(b.companyId)) return false;
+    seen.add(b.companyId);
+    return true;
+  });
 
   return (
     <section className='py-12'>
       {/* Section header */}
-      <div className='flex items-start justify-between gap-4 mb-6 flex-wrap'>
-        <div className='flex flex-col'>
-          <p className='text-[10px] tracking-[0.2em] uppercase text-gray-500 mb-1'>Direct Connect</p>
-          <h2 className='font-display font-semibold text-[22px] text-white leading-tight tracking-tight'>
-            კომპანიებს გაუგზავნე CV
-          </h2>
-          <p className='text-[13px] text-gray-500 mt-1.5'>
-            პირდაპირი კავშირი კომპანიის HR-თან — ვაკანსიის გარეშეც
-          </p>
-        </div>
-
-        {/* Category filter dropdown */}
-        {filterTabs.length > 2 && (
-          <div className='flex-shrink-0 self-end'>
-            <select
-              value={activeCategory}
-              onChange={e => setActive(e.target.value)}
-              className='h-8 bg-white/[0.05] border border-white/[0.10] rounded-lg px-3 text-[12px] text-gray-300 focus:outline-none focus:border-white/20 transition-colors appearance-none pr-7 cursor-pointer'
-              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}>
-              {filterTabs.map(c => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </select>
-          </div>
-        )}
+      <div className='mb-6'>
+        <p className='text-[10px] tracking-[0.2em] uppercase text-gray-500 mb-1'>Direct Connect</p>
+        <h2 className='font-display font-semibold text-[22px] text-white leading-tight tracking-tight'>
+          კომპანიებს გაუგზავნე CV
+        </h2>
+        <p className='text-[13px] text-gray-500 mt-1.5'>
+          პირდაპირი კავშირი კომპანიის HR-თან — ვაკანსიის გარეშეც
+        </p>
       </div>
 
       {/* Grid */}

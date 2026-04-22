@@ -1,5 +1,6 @@
 const supabase = require('../supabase');
 const cache = require('../utils/cache');
+const { sendNotification } = require('../utils/notify');
 const { z } = require('zod');
 const path = require('path');
 const fs = require('fs');
@@ -54,12 +55,16 @@ const createBox = async (req, res, next) => {
       .maybeSingle();
     if (!employer) return res.status(404).json({ message: 'Employer profile not found' });
 
-    const { title, description, category } = req.body;
-    if (!title?.trim()) return res.status(400).json({ message: 'სათაური სავალდებულოა' });
+    // Each company is limited to one CV Box
+    const { count } = await supabase
+      .from('company_boxes')
+      .select('id', { count: 'exact', head: true })
+      .eq('company_id', employer.id);
+    if (count > 0) return res.status(409).json({ message: 'კომპანიას უკვე აქვს CV Box' });
 
     const { data: box, error } = await supabase
       .from('company_boxes')
-      .insert({ company_id: employer.id, title: title.trim(), description: description?.trim() || null, category: category || 'OTHER' })
+      .insert({ company_id: employer.id, title: 'Drop your CV here' })
       .select()
       .single();
     if (error) throw error;
@@ -68,7 +73,6 @@ const createBox = async (req, res, next) => {
     res.status(201).json({
       id: box.id, companyId: box.company_id, title: box.title,
       description: box.description, isActive: box.is_active, createdAt: box.created_at,
-      category: box.category || 'OTHER',
     });
   } catch (err) { next(err); }
 };
@@ -177,6 +181,23 @@ const submitCV = async (req, res, next) => {
       .single();
     if (error) throw error;
 
+    // Notify employer
+    try {
+      const { data: boxWithEmployer } = await supabase
+        .from('company_boxes')
+        .select('employer_profiles!company_id(user_id, company_name)')
+        .eq('id', box.id)
+        .maybeSingle();
+      const employerUserId = boxWithEmployer?.employer_profiles?.user_id;
+      if (employerUserId) {
+        await sendNotification(
+          req.app,
+          employerUserId,
+          `${candidateName}-მ გამოგიგზავნათ CV`
+        );
+      }
+    } catch (_) { /* non-fatal */ }
+
     res.status(201).json({ message: 'CV წარმატებით გაიგზავნა', submissionId: submission.id });
   } catch (err) { next(err); }
 };
@@ -268,4 +289,42 @@ const updateBox = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { createBox, listAllBoxes, listBoxes, submitCV, listSubmissions, updateBox, cvUpload };
+// ── POST /api/company-boxes/:boxId/submissions/:subId/view ────────────────
+const viewSubmissionCV = async (req, res, next) => {
+  try {
+    const { data: employer } = await supabase
+      .from('employer_profiles')
+      .select('id, company_name')
+      .eq('user_id', req.user.id)
+      .maybeSingle();
+    if (!employer) return res.status(403).json({ message: 'Forbidden' });
+
+    const { data: sub } = await supabase
+      .from('cv_submissions')
+      .select('id, candidate_name, candidate_email, company_box_id, company_boxes!company_box_id(company_id)')
+      .eq('id', +req.params.subId)
+      .maybeSingle();
+    if (!sub) return res.status(404).json({ message: 'Submission not found' });
+    if (sub.company_boxes?.company_id !== employer.id) return res.status(403).json({ message: 'Forbidden' });
+
+    // Notify candidate if they have a registered account with this email
+    try {
+      const { data: candidateUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', sub.candidate_email)
+        .maybeSingle();
+      if (candidateUser) {
+        await sendNotification(
+          req.app,
+          candidateUser.id,
+          `${employer.company_name}-მ გახსნა თქვენი CV`
+        );
+      }
+    } catch (_) { /* non-fatal */ }
+
+    res.json({ success: true });
+  } catch (err) { next(err); }
+};
+
+module.exports = { createBox, listAllBoxes, listBoxes, submitCV, listSubmissions, updateBox, cvUpload, viewSubmissionCV };

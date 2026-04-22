@@ -262,7 +262,7 @@ export default function JobDetailPage() {
             </div>
 
             {/* Description */}
-            <div className='bg-white border border-gray-100 rounded-2xl p-8'>
+            <div className='bg-white border border-gray-100 rounded-2xl p-8 mb-3'>
               <h2 className='font-display font-semibold text-[15px] text-gray-900 mb-5 tracking-tight'>
                 სამუშაოს აღწერა
               </h2>
@@ -270,6 +270,24 @@ export default function JobDetailPage() {
                 {job.description}
               </div>
             </div>
+
+            {/* ── Carousels: company jobs + similar jobs ── */}
+            {(job.companyJobs?.length > 0 || job.similarJobs?.length > 0) && (
+              <div className='pt-2'>
+                <JobCarousel
+                  title={`${job.employer?.companyName}-ის სხვა ვაკანსიები`}
+                  subtitle='კომპანია'
+                  jobs={job.companyJobs}
+                  onJobClick={(jid) => navigate('/jobs/' + jid)}
+                />
+                <JobCarousel
+                  title='მსგავსი ვაკანსიები'
+                  subtitle={CAT_LABELS[job.category] || 'კატეგორია'}
+                  jobs={job.similarJobs}
+                  onJobClick={(jid) => navigate('/jobs/' + jid)}
+                />
+              </div>
+            )}
 
           </div>
 
@@ -415,24 +433,6 @@ export default function JobDetailPage() {
           </div>
 
         </div>
-
-        {/* ── Carousels ──────────────────────────────────── */}
-        {(job.companyJobs?.length > 0 || job.similarJobs?.length > 0) && (
-          <div className='mt-10 border-t border-gray-100 pt-10'>
-            <JobCarousel
-              title={`${job.employer?.companyName}-ის სხვა ვაკანსიები`}
-              subtitle='კომპანია'
-              jobs={job.companyJobs}
-              onJobClick={(jid) => navigate('/jobs/' + jid)}
-            />
-            <JobCarousel
-              title='მსგავსი ვაკანსიები'
-              subtitle={CAT_LABELS[job.category] || 'კატეგორია'}
-              jobs={job.similarJobs}
-              onJobClick={(jid) => navigate('/jobs/' + jid)}
-            />
-          </div>
-        )}
 
       </div>
     </div>
