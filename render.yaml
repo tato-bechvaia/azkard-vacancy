@@ -2,7 +2,7 @@ services:
   - type: web
     name: azkard-backend
     env: node
-    rootDir: backend
+    rootDir: ./backend
     buildCommand: npm install
     startCommand: node server.js
     envVars:
