@@ -224,6 +224,7 @@ function CompanyBox({ box, colorScheme, index: idx }) {
   const [hovered, setHovered]   = useState(false);
   const [selected, setSelected] = useState(false);
   const [rotate, setRotate]     = useState({ x: 0, y: 0 });
+  const [imgError, setImgError] = useState(false);
 
   const entranceDelay = `${idx * 80}ms`;
 
@@ -288,8 +289,8 @@ function CompanyBox({ box, colorScheme, index: idx }) {
           <div
             className='w-11 h-11 rounded-xl flex items-center justify-center font-display font-bold text-[15px] mb-4'
             style={{ background: `${colorScheme.accent}20`, color: colorScheme.accent, border: `1px solid ${colorScheme.accent}35` }}>
-            {box.employer?.avatarUrl
-              ? <img src={box.employer.avatarUrl} alt='' className='w-full h-full object-cover rounded-xl' />
+            {box.employer?.avatarUrl && !imgError
+              ? <img src={box.employer.avatarUrl} alt='' className='w-full h-full object-cover rounded-xl' onError={() => setImgError(true)} />
               : initials(box.employer?.companyName || '?')
             }
           </div>
