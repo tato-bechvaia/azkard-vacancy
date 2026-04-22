@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { assetUrl } from '../utils/assetUrl';
@@ -36,94 +36,6 @@ const INPUT = 'w-full h-10 bg-surface-50 border border-surface-200 rounded-lg px
 const TEXTAREA = 'w-full bg-surface-50 border border-surface-200 rounded-lg px-3 py-2.5 text-[13px] text-gray-800 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100/60 transition-all duration-150 resize-none placeholder-gray-400';
 const SELECT_CLS = 'h-10 bg-surface-50 border border-surface-200 rounded-lg px-3 text-[13px] text-gray-700 focus:outline-none focus:border-brand-400 transition-colors duration-150';
 
-// ── 3D Candidate Identity Card ────────────────────────────────────────────────
-function CandidateIdentityCard({ initials, name, headline }) {
-  const [rotate, setRotate] = useState({ x: 0, y: 0 });
-  const [hovered, setHovered] = useState(false);
-  const cardRef = useRef(null);
-
-  const handleMouseMove = (e) => {
-    const rect = cardRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    setRotate({
-      x: -(e.clientY - cy) / (rect.height / 2) * 10,
-      y:  (e.clientX - cx) / (rect.width  / 2) * 10,
-    });
-  };
-
-  return (
-    <div
-      className='mb-4'
-      style={{ perspective: '600px' }}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => { setHovered(false); setRotate({ x: 0, y: 0 }); }}>
-      <div
-        ref={cardRef}
-        style={{
-          transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg) ${hovered ? 'scale(1.03)' : 'scale(1)'}`,
-          transition: hovered
-            ? 'transform 0.12s ease-out'
-            : 'transform 0.5s cubic-bezier(0.23,1,0.32,1)',
-          transformStyle: 'preserve-3d',
-          background: 'linear-gradient(135deg, #1a1040 0%, #0d0d1a 60%, #1a0d2e 100%)',
-          boxShadow: hovered
-            ? '0 12px 32px rgba(99,70,224,0.35), 0 0 0 1px rgba(99,70,224,0.3)'
-            : '0 4px 16px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.06)',
-        }}
-        className='relative w-full rounded-2xl p-4 overflow-hidden cursor-default select-none'>
-
-        {/* Shimmer stripe */}
-        <div className='absolute inset-0 pointer-events-none overflow-hidden rounded-2xl'>
-          <div
-            className='absolute -top-4 -left-4 w-24 h-24 rounded-full opacity-30'
-            style={{ background: 'radial-gradient(circle, #7c3aed 0%, transparent 70%)' }}
-          />
-          <div
-            className='absolute bottom-0 right-0 w-20 h-20 rounded-full opacity-20'
-            style={{ background: 'radial-gradient(circle, #6366f1 0%, transparent 70%)' }}
-          />
-          {/* Scan line */}
-          <div className='absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-400/50 to-transparent' />
-        </div>
-
-        {/* Initials orb */}
-        <div
-          className='w-10 h-10 rounded-xl flex items-center justify-center font-display font-bold text-[16px] mb-3'
-          style={{
-            background: 'linear-gradient(135deg, rgba(124,58,237,0.4) 0%, rgba(99,102,241,0.25) 100%)',
-            border: '1px solid rgba(124,58,237,0.5)',
-            color: '#c4b5fd',
-            boxShadow: '0 0 12px rgba(124,58,237,0.25)',
-          }}>
-          {initials || '?'}
-        </div>
-
-        {/* Label */}
-        <p className='text-[9px] tracking-[0.18em] uppercase text-violet-400/60 mb-0.5 font-medium'>Candidate</p>
-        <p className='font-display font-semibold text-[13px] text-white leading-tight truncate'>
-          {name || 'კანდიდატი'}
-        </p>
-        {headline && (
-          <p className='text-[10.5px] text-violet-300/50 mt-0.5 truncate'>{headline}</p>
-        )}
-
-        {/* Chip decoration */}
-        <div className='absolute bottom-3 right-3 flex flex-col gap-0.5 opacity-30'>
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className='flex gap-0.5'>
-              {[...Array(4)].map((_, j) => (
-                <div key={j} className='w-0.5 h-0.5 rounded-full bg-violet-400' />
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
@@ -323,46 +235,45 @@ export default function ProfilePage() {
 
             {/* Profile card */}
             <div className='px-5 pt-6 pb-5 border-b border-gray-100'>
-              {user?.role === 'CANDIDATE' ? (
-                /* ── 3D Identity Card for candidates ── */
-                <CandidateIdentityCard initials={initials} name={displayName} headline={profile?.headline} />
-              ) : (
-                /* ── Employer avatar (unchanged) ── */
-                <div className='relative w-fit mb-4'>
-                  {profile?.avatarUrl && !avatarLoadError ? (
-                    <img
-                      src={assetUrl(profile.avatarUrl)}
-                      alt='avatar'
-                      onError={() => setAvatarLoadError(true)}
-                      className='w-12 h-12 rounded-full object-cover border border-gray-100'
-                    />
-                  ) : (
-                    <div className='w-12 h-12 rounded-full bg-brand-50 border border-brand-100 flex items-center justify-center font-display font-semibold text-brand-600 text-[15px]'>
-                      {initials}
-                    </div>
-                  )}
-                  <label className='absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-brand-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-brand-700 transition-colors duration-150 shadow-sm'>
-                    <input type='file' accept='.jpg,.jpeg,.png,.webp' className='hidden' onChange={handleAvatarUpload} />
-                    <svg width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2.5'>
-                      <path d='M12 5v14M5 12h14'/>
-                    </svg>
-                  </label>
-                  {profile?.avatarUrl && !avatarLoadError && (
-                    <button
-                      onClick={handleAvatarDelete}
-                      title='ფოტოს წაშლა'
-                      className='absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors duration-150 shadow-sm'>
-                      <svg width='7' height='7' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='3'>
-                        <path d='M18 6 6 18M6 6l12 12'/>
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              )}
-              {user?.role === 'EMPLOYER' && (
+              {user?.role === 'EMPLOYER' ? (
                 <>
+                  <div className='relative w-fit mb-4'>
+                    {profile?.avatarUrl && !avatarLoadError ? (
+                      <img
+                        src={assetUrl(profile.avatarUrl)}
+                        alt='avatar'
+                        onError={() => setAvatarLoadError(true)}
+                        className='w-12 h-12 rounded-full object-cover border border-gray-100'
+                      />
+                    ) : (
+                      <div className='w-12 h-12 rounded-full bg-brand-50 border border-brand-100 flex items-center justify-center font-display font-semibold text-brand-600 text-[15px]'>
+                        {initials}
+                      </div>
+                    )}
+                    <label className='absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-brand-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-brand-700 transition-colors duration-150 shadow-sm'>
+                      <input type='file' accept='.jpg,.jpeg,.png,.webp' className='hidden' onChange={handleAvatarUpload} />
+                      <svg width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2.5'>
+                        <path d='M12 5v14M5 12h14'/>
+                      </svg>
+                    </label>
+                    {profile?.avatarUrl && !avatarLoadError && (
+                      <button
+                        onClick={handleAvatarDelete}
+                        title='ფოტოს წაშლა'
+                        className='absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors duration-150 shadow-sm'>
+                        <svg width='7' height='7' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='3'>
+                          <path d='M18 6 6 18M6 6l12 12'/>
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                   <p className='font-semibold text-[13.5px] text-gray-900 leading-tight'>{displayName || '—'}</p>
                   <p className='text-[11.5px] text-gray-400 mt-0.5'>დამსაქმებელი</p>
+                </>
+              ) : (
+                <>
+                  <p className='font-semibold text-[13.5px] text-gray-900 leading-tight mb-0.5'>{displayName || '—'}</p>
+                  <p className='text-[11.5px] text-gray-400'>კანდიდატი</p>
                 </>
               )}
             </div>
@@ -626,9 +537,9 @@ export default function ProfilePage() {
                         {new Date(app.appliedAt).toLocaleDateString()}
                       </p>
                     </div>
-                    {app.cvUrl && (
+                    {(app.cvUrl || app.candidate?.cvUrl) && (
                       <a
-                        href={assetUrl(app.cvUrl)}
+                        href={assetUrl(app.cvUrl || app.candidate?.cvUrl)}
                         target='_blank'
                         rel='noreferrer'
                         className='flex-shrink-0 text-[12px] font-medium text-brand-600 hover:underline'

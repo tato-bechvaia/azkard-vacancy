@@ -77,6 +77,16 @@ const listJobs = async (req, res, next) => {
     const todayStart = new Date(now);
     todayStart.setHours(0, 0, 0, 0);
 
+    // Pre-fetch employer IDs matching company name search (once, reused across all queries)
+    let searchEmpIds = [];
+    if (search) {
+      const { data: empMatches } = await supabase
+        .from('employer_profiles')
+        .select('id')
+        .ilike('company_name', `%${search}%`);
+      searchEmpIds = (empMatches || []).map(e => e.id);
+    }
+
     // Build shared filter builder for reuse
     const applySharedFilters = (query) => {
       query = applyActiveFilter(query, now);
@@ -85,7 +95,13 @@ const listJobs = async (req, res, next) => {
       if (experience) query = query.eq('experience', experience);
       if (salaryMin)  query = query.gte('salary_min', +salaryMin);
       if (salaryMax)  query = query.lte('salary_min', +salaryMax);
-      if (search)     query = query.ilike('title', `%${search}%`);
+      if (search) {
+        if (searchEmpIds.length > 0) {
+          query = query.or(`title.ilike.%${search}%,employer_profile_id.in.(${searchEmpIds.join(',')})`);
+        } else {
+          query = query.ilike('title', `%${search}%`);
+        }
+      }
       if (category) {
         const cats = category.split(',').map(c => c.trim()).filter(Boolean);
         if (cats.length === 1) query = query.eq('category', cats[0]);

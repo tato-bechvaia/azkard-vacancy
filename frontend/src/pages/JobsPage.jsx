@@ -81,8 +81,8 @@ export default function JobsPage() {
   const [experience, setExperience] = useState('');
 
   const observerRef  = useRef(null);
-  const loadingRef   = useRef(false);
-  const carouselDone = useRef(false); // load carousels only on first page-1 fetch
+  const abortRef     = useRef(null);
+  const carouselDone = useRef(false);
 
   useEffect(() => {
     setJobs([]);
@@ -93,11 +93,17 @@ export default function JobsPage() {
   }, [search, location, regime, experience, categories, salaryMin, salaryMax]);
 
   useEffect(() => {
-    if (loadingRef.current) return;
-    loadingRef.current = true;
+    // Cancel any in-flight request before starting a new one
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setLoading(true);
     const category = categories.length > 0 ? categories.join(',') : '';
-    api.get('/jobs', { params: { search, location, regime, experience, category, salaryMin, salaryMax, page, limit: LIMIT } })
+    api.get('/jobs', {
+      params: { search, location, regime, experience, category, salaryMin, salaryMax, page, limit: LIMIT },
+      signal: controller.signal,
+    })
       .then(({ data }) => {
         if (page === 1) {
           setPremiumJobs(data.premiumJobs || []);
@@ -114,8 +120,10 @@ export default function JobsPage() {
         setTotal(data.total);
         setHasMore(page < data.pages);
       })
-      .catch(() => {})
-      .finally(() => { setLoading(false); loadingRef.current = false; });
+      .catch(err => {
+        if (err.code === 'ERR_CANCELED') return; // ignore aborted requests
+      })
+      .finally(() => { setLoading(false); });
   }, [search, location, regime, experience, categories, salaryMin, salaryMax, page]);
 
   const sentinelRef = useCallback(node => {

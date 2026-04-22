@@ -1,5 +1,6 @@
 const supabase = require('../supabase');
 const { sendNotification } = require('../utils/notify');
+const { uploadToStorage } = require('../utils/storage');
 
 const applyToJob = async (req, res, next) => {
   try {
@@ -21,7 +22,9 @@ const applyToJob = async (req, res, next) => {
     if (existing) return res.status(409).json({ message: 'უკვე გაგზავნილი გაქვთ განაცხადი' });
 
     let cvUrl = candidate.cv_url || null;
-    if (req.file) cvUrl = '/uploads/' + req.file.filename;
+    if (req.file) {
+      cvUrl = await uploadToStorage('cvs', 'cv', req.file.buffer, req.file.originalname, req.file.mimetype);
+    }
 
     const { data: application, error } = await supabase
       .from('applications')

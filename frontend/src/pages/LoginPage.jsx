@@ -8,17 +8,22 @@ const FEATURES = ['5 000+ ვაკანსია', '1 200+ კომპან�
 export default function LoginPage() {
   const { login }  = useAuth();
   const navigate   = useNavigate();
-  const [form, setForm]   = useState({ email: '', password: '' });
-  const [error, setError] = useState('');
+  const [form, setForm]       = useState({ email: '', password: '' });
+  const [error, setError]     = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
     try {
       const { data } = await api.post('/auth/login', form);
       login(data.token, data.role, data.displayName, data.isAdmin);
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'შესვლა ვერ მოხერხდა');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -112,8 +117,15 @@ export default function LoginPage() {
             </div>
             <button
               type='submit'
-              className='w-full h-11 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-medium transition-colors duration-150 mt-2'>
-              შესვლა
+              disabled={loading}
+              className='w-full h-11 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white rounded-xl text-sm font-medium transition-colors duration-150 mt-2 flex items-center justify-center gap-2'>
+              {loading && (
+                <svg className='animate-spin h-4 w-4' viewBox='0 0 24 24' fill='none'>
+                  <circle cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='3' className='opacity-25'/>
+                  <path d='M4 12a8 8 0 018-8' stroke='currentColor' strokeWidth='3' strokeLinecap='round'/>
+                </svg>
+              )}
+              {loading ? 'შესვლა...' : 'შესვლა'}
             </button>
           </form>
 
