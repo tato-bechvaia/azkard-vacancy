@@ -1,18 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import api from '../api/axios';
 
-const BOX_COLORS = [
-  { bg: '#1a1a2e', accent: '#6366f1', glow: 'rgba(99,102,241,0.25)' },
-  { bg: '#0f1f2e', accent: '#0ea5e9', glow: 'rgba(14,165,233,0.25)' },
-  { bg: '#1e1a0f', accent: '#f59e0b', glow: 'rgba(245,158,11,0.22)' },
-  { bg: '#1a2e1a', accent: '#10b981', glow: 'rgba(16,185,129,0.22)' },
-  { bg: '#2e1a1a', accent: '#ef4444', glow: 'rgba(239,68,68,0.22)' },
-  { bg: '#1e102e', accent: '#a855f7', glow: 'rgba(168,85,247,0.22)' },
-  { bg: '#0f2e2a', accent: '#14b8a6', glow: 'rgba(20,184,166,0.22)' },
-  { bg: '#2e1e10', accent: '#f97316', glow: 'rgba(249,115,22,0.22)' },
-];
-
-
 const SUBMISSION_CATS = [
   { value: 'IT',          label: 'IT' },
   { value: 'SALES',       label: 'გაყიდვები' },
@@ -35,14 +23,14 @@ function CVModal({ box, onClose }) {
   const [file, setFile]           = useState(null);
   const [selCats, setSelCats]     = useState([]);
   const [catOpen, setCatOpen]     = useState(false);
-  const [status, setStatus]       = useState('idle'); // idle | loading | success | error
+  const [status, setStatus]       = useState('idle');
   const [errMsg, setErrMsg]       = useState('');
   const fileRef = useRef(null);
 
   const toggleCat = (val) => {
     setSelCats(prev => {
       if (prev.includes(val)) return prev.filter(c => c !== val);
-      if (prev.length >= 3) return prev; // max 3
+      if (prev.length >= 3) return prev;
       return [...prev, val];
     });
   };
@@ -72,7 +60,6 @@ function CVModal({ box, onClose }) {
       className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm'
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className='w-full max-w-md bg-gray-950 border border-white/10 rounded-2xl shadow-2xl overflow-hidden'>
-        {/* Header */}
         <div className='flex items-center justify-between px-6 pt-5 pb-4 border-b border-white/[0.07]'>
           <div>
             <h3 className='font-display font-semibold text-white text-[15px]'>{box.employer?.companyName}</h3>
@@ -120,15 +107,11 @@ function CVModal({ box, onClose }) {
                 placeholder='რამდენიმე სიტყვა შენს შესახებ...'
               />
             </div>
-            {/* Category multi-select (max 3) */}
             <div className='relative'>
               <label className='block text-[11px] text-gray-500 mb-1.5'>
                 სფერო (მაქს. 3)
-                {selCats.length > 0 && (
-                  <span className='ml-1.5 text-white/40'>{selCats.length}/3</span>
-                )}
+                {selCats.length > 0 && <span className='ml-1.5 text-white/40'>{selCats.length}/3</span>}
               </label>
-              {/* Trigger */}
               <button
                 type='button'
                 onClick={() => setCatOpen(o => !o)}
@@ -144,7 +127,6 @@ function CVModal({ box, onClose }) {
                   <polyline points='6 9 12 15 18 9'/>
                 </svg>
               </button>
-              {/* Dropdown */}
               {catOpen && (
                 <div className='absolute z-10 left-0 right-0 mt-1 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden'>
                   <div className='flex flex-wrap gap-1.5 p-2.5'>
@@ -174,9 +156,7 @@ function CVModal({ box, onClose }) {
                     <span className='text-[10.5px] text-gray-600'>
                       {selCats.length === 3 ? 'მაქსიმუმი მიღწეულია' : `კიდევ ${3 - selCats.length} შეგიძლია`}
                     </span>
-                    <button
-                      type='button'
-                      onClick={() => setCatOpen(false)}
+                    <button type='button' onClick={() => setCatOpen(false)}
                       className='text-[11px] text-gray-500 hover:text-white transition-colors px-2 py-0.5 rounded'>
                       დახურვა
                     </button>
@@ -193,18 +173,10 @@ function CVModal({ box, onClose }) {
                 <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='#6B7280' strokeWidth='1.75'><path d='M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4'/><polyline points='17 8 12 3 7 8'/><line x1='12' y1='3' x2='12' y2='15'/></svg>
                 <span className='text-[12px] text-gray-500 truncate'>{file ? file.name : 'ფაილის ატვირთვა...'}</span>
               </div>
-              <input
-                ref={fileRef}
-                type='file'
-                accept='.pdf,.doc,.docx'
-                className='hidden'
-                onChange={e => setFile(e.target.files[0] || null)}
-              />
+              <input ref={fileRef} type='file' accept='.pdf,.doc,.docx' className='hidden' onChange={e => setFile(e.target.files[0] || null)} />
             </div>
 
-            {errMsg && (
-              <p className='text-[11.5px] text-red-400'>{errMsg}</p>
-            )}
+            {errMsg && <p className='text-[11.5px] text-red-400'>{errMsg}</p>}
 
             <button
               type='submit'
@@ -220,110 +192,159 @@ function CVModal({ box, onClose }) {
 }
 
 // ── Single 3D Company Box ────────────────────────────────────────────────────
-function CompanyBox({ box, colorScheme, index: idx }) {
-  const [hovered, setHovered]   = useState(false);
+function CompanyBox({ box, index: idx }) {
+  const [flipped, setFlipped] = useState(false);
   const [selected, setSelected] = useState(false);
-  const [rotate, setRotate]     = useState({ x: 0, y: 0 });
   const [imgError, setImgError] = useState(false);
 
-  const entranceDelay = `${idx * 80}ms`;
-
-  const handleMouseMove = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top  + rect.height / 2;
-    const rx = -(e.clientY - cy) / (rect.height / 2) * 8;
-    const ry =  (e.clientX - cx) / (rect.width  / 2) * 8;
-    setRotate({ x: rx, y: ry });
-  };
-
-  const handleMouseLeave = () => {
-    setHovered(false);
-    setRotate({ x: 0, y: 0 });
-  };
-
-  const initials = (name) => name
-    .split(' ')
-    .map(w => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+  const initials = (name) =>
+    (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   return (
     <>
+      {/* Outer: perspective container + staggered entrance */}
       <div
-        style={{ perspective: '800px', animationDelay: entranceDelay }}
-        className='company-box-entrance'>
-        <div
-          onMouseEnter={() => setHovered(true)}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          onClick={() => setSelected(true)}
-          style={{
-            transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg) ${hovered ? 'scale(1.04)' : 'scale(1)'}`,
-            transition: hovered
-              ? 'transform 0.15s ease-out, box-shadow 0.2s ease'
-              : 'transform 0.45s cubic-bezier(0.23,1,0.32,1), box-shadow 0.3s ease',
-            transformStyle: 'preserve-3d',
-            background: colorScheme.bg,
-            boxShadow: hovered
-              ? `0 20px 50px ${colorScheme.glow}, 0 0 0 1px ${colorScheme.accent}40`
-              : `0 8px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05)`,
-            cursor: 'pointer',
-          }}
-          className='relative rounded-2xl p-5 select-none'>
+        className='company-box-entrance'
+        style={{ perspective: '900px', animationDelay: `${idx * 70}ms` }}
+        onMouseEnter={() => setFlipped(true)}
+        onMouseLeave={() => setFlipped(false)}
+      >
+        {/* 3D flip card wrapper */}
+        <div style={{
+          position: 'relative',
+          height: '168px',
+          transformStyle: 'preserve-3d',
+          transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+          transition: 'transform 1.21s cubic-bezier(0.23, 1, 0.32, 1)',
+        }}>
 
-          {/* Floating top accent bar */}
-          <div
-            className='absolute top-0 left-4 right-4 h-[1.5px] rounded-full'
-            style={{ background: `linear-gradient(90deg, transparent, ${colorScheme.accent}80, transparent)` }}
-          />
+          {/* ── FRONT FACE ── */}
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            background: '#0e0e0e',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '14px',
+            padding: '18px 18px 16px',
+            display: 'flex',
+            flexDirection: 'column',
+            /* Stacked offset shadow = 3D box depth illusion */
+            boxShadow:
+              '4px 4px 0 #070707, 8px 8px 0 #050505, 0 16px 36px rgba(0,0,0,0.55)',
+            userSelect: 'none',
+          }}>
+            {/* "Tape" strip — package detail */}
+            <div style={{
+              position: 'absolute',
+              top: -1,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '36px',
+              height: '7px',
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '0 0 5px 5px',
+            }} />
 
-          {/* Corner glow */}
-          <div
-            className='absolute top-0 right-0 w-24 h-24 rounded-bl-full opacity-20 pointer-events-none'
-            style={{ background: `radial-gradient(circle, ${colorScheme.accent} 0%, transparent 70%)` }}
-          />
-
-          {/* Avatar / Initials */}
-          <div
-            className='w-11 h-11 rounded-xl flex items-center justify-center font-display font-bold text-[15px] mb-4'
-            style={{ background: `${colorScheme.accent}20`, color: colorScheme.accent, border: `1px solid ${colorScheme.accent}35` }}>
-            {box.employer?.avatarUrl && !imgError
-              ? <img src={box.employer.avatarUrl} alt='' className='w-full h-full object-cover rounded-xl' onError={() => setImgError(true)} />
-              : initials(box.employer?.companyName || '?')
-            }
-          </div>
-
-          {/* Company name */}
-          <p className='text-[10.5px] font-medium tracking-widest uppercase mb-2' style={{ color: colorScheme.accent }}>
-            {box.employer?.companyName}
-          </p>
-
-          {/* Fixed tagline */}
-          <h3 className='font-display font-semibold text-[15px] text-white leading-snug mb-3'>
-            Drop your CV here
-          </h3>
-
-          {/* CTA */}
-          <div
-            className='inline-flex items-center gap-1.5 text-[11px] font-medium transition-all duration-150'
-            style={{ color: hovered ? colorScheme.accent : '#6B7280' }}>
-            <svg width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round'>
-              <path d='M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4'/>
-              <polyline points='17 8 12 3 7 8'/>
-              <line x1='12' y1='3' x2='12' y2='15'/>
-            </svg>
-            CV გაგზავნა
-          </div>
-
-          {/* Submission count badge */}
-          {box._count?.submissions > 0 && (
-            <div className='absolute top-4 right-4 flex items-center gap-1 text-[9.5px] text-gray-600'>
-              <svg width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'><path d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2'/><circle cx='9' cy='7' r='4'/></svg>
-              {box._count.submissions}
+            {/* Avatar */}
+            <div style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '9px',
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.09)',
+              overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '14px',
+              fontSize: '13px',
+              fontWeight: 700,
+              color: 'rgba(255,255,255,0.55)',
+              flexShrink: 0,
+            }}>
+              {box.employer?.avatarUrl && !imgError
+                ? <img src={box.employer.avatarUrl} alt='' style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setImgError(true)} />
+                : initials(box.employer?.companyName)
+              }
             </div>
-          )}
+
+            {/* Company name */}
+            <p style={{
+              fontSize: '13px',
+              fontWeight: 600,
+              color: '#e5e7eb',
+              lineHeight: 1.35,
+              marginBottom: '4px',
+            }}>
+              {box.employer?.companyName}
+            </p>
+
+            {/* Sub hint */}
+            <p style={{
+              fontSize: '10.5px',
+              color: 'rgba(255,255,255,0.22)',
+              marginTop: 'auto',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}>
+              CV გაგზავნა
+              <svg width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' style={{ opacity: 0.5 }}>
+                <path d='M5 12h14M12 5l7 7-7 7'/>
+              </svg>
+            </p>
+          </div>
+
+          {/* ── BACK FACE ── */}
+          <div
+            onClick={() => setSelected(true)}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
+              transform: 'rotateY(180deg)',
+              background: '#f4f3ef',
+              borderRadius: '14px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              cursor: 'pointer',
+              boxShadow: '4px 4px 0 #dddcd8, 8px 8px 0 #d0cfc9, 0 16px 36px rgba(0,0,0,0.45)',
+              userSelect: 'none',
+            }}
+          >
+            {/* Upload icon circle */}
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '50%',
+              background: '#111',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2' strokeLinecap='round'>
+                <path d='M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4'/>
+                <polyline points='17 8 12 3 7 8'/>
+                <line x1='12' y1='3' x2='12' y2='15'/>
+              </svg>
+            </div>
+
+            <div style={{ textAlign: 'center', lineHeight: 1.35 }}>
+              <p style={{ fontSize: '13px', fontWeight: 700, color: '#111', marginBottom: '3px' }}>
+                Drop Your CV
+              </p>
+              <p style={{ fontSize: '10.5px', color: '#888' }}>
+                {box.employer?.companyName}
+              </p>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -347,7 +368,6 @@ export default function CompanyBoxes() {
   if (loading) return null;
   if (!boxes.length) return null;
 
-  // One box per company — keep the first (most recent) for each companyId
   const seen = new Set();
   const visible = boxes.filter(b => {
     if (seen.has(b.companyId)) return false;
@@ -369,22 +389,11 @@ export default function CompanyBoxes() {
       </div>
 
       {/* Grid */}
-      <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4'>
+      <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-5'>
         {visible.map((box, i) => (
-          <CompanyBox
-            key={box.id}
-            box={box}
-            colorScheme={BOX_COLORS[i % BOX_COLORS.length]}
-            index={i}
-          />
+          <CompanyBox key={box.id} box={box} index={i} />
         ))}
       </div>
-
-      {visible.length === 0 && (
-        <div className='text-center py-12 text-gray-600 text-[13px]'>
-          ამ კატეგორიაში CV Box არ არის
-        </div>
-      )}
     </section>
   );
 }
