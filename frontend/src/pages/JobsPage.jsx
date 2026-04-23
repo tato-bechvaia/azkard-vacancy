@@ -83,6 +83,7 @@ export default function JobsPage() {
   const observerRef  = useRef(null);
   const abortRef     = useRef(null);
   const carouselDone = useRef(false);
+  const loadingRef   = useRef(false);
 
   useEffect(() => {
     setJobs([]);
@@ -99,6 +100,7 @@ export default function JobsPage() {
     abortRef.current = controller;
 
     setLoading(true);
+    loadingRef.current = true;
     const category = categories.length > 0 ? categories.join(',') : '';
     api.get('/jobs', {
       params: { search, location, regime, experience, category, salaryMin, salaryMax, page, limit: LIMIT },
@@ -123,7 +125,7 @@ export default function JobsPage() {
       .catch(err => {
         if (err.code === 'ERR_CANCELED') return; // ignore aborted requests
       })
-      .finally(() => { setLoading(false); });
+      .finally(() => { setLoading(false); loadingRef.current = false; });
   }, [search, location, regime, experience, categories, salaryMin, salaryMax, page]);
 
   const sentinelRef = useCallback(node => {

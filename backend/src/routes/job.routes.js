@@ -5,7 +5,8 @@ const { protect, requireRole } = require('../middleware/auth.middleware');
 router.get('/',      listJobs);
 router.get('/mine',  protect, requireRole('EMPLOYER'), myJobs);
 router.get('/:id',   getJob);
-router.post('/',     protect, requireRole('EMPLOYER'), createJob);
+// Direct job creation disabled — use POST /api/payments/create-session instead
+// router.post('/',  protect, requireRole('EMPLOYER'), createJob);
 router.put('/:id',   protect, requireRole('EMPLOYER'), updateJob);
 router.delete('/:id',protect, requireRole('EMPLOYER'), deleteJob);
 

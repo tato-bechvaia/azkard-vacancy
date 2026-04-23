@@ -41,6 +41,9 @@ const formatJob = (j) => {
     premiumBadgeLabel: j.premium_badge_label,
     highlightColor: j.highlight_color,
     featuredUntil: j.featured_until,
+    pricingTier: j.pricing_tier || 'USUAL',
+    priceAmount: j.price_amount || 35,
+    paymentStatus: j.payment_status || 'PAID',
     employer: ep ? {
       companyName: ep.company_name,
       logoUrl: ep.logo_url,
@@ -61,6 +64,7 @@ const CAROUSEL_TAKE = 16;
 const applyActiveFilter = (query, now) =>
   query
     .eq('status', 'HIRING')
+    .eq('payment_status', 'PAID')
     .or(`expires_at.is.null,expires_at.gte.${now.toISOString()}`);
 
 const listJobs = async (req, res, next) => {
@@ -257,7 +261,11 @@ const createJob = async (req, res, next) => {
       experience, applicationMethod, category,
       isPremium, premiumBadgeLabel, highlightColor, featuredUntil,
       isForStudents, isInternship, expiresAt,
+      pricingTier,
     } = req.body;
+
+    const tier = pricingTier === 'PREMIUM' ? 'PREMIUM' : 'USUAL';
+    const priceAmount = tier === 'PREMIUM' ? 65 : 35;
 
     const { data: employer } = await supabase
       .from('employer_profiles')
@@ -283,10 +291,13 @@ const createJob = async (req, res, next) => {
         application_method: applicationMethod || 'CV_ONLY',
         category: category || 'OTHER',
         employer_profile_id: employer.id,
-        is_premium: isPremium === true || isPremium === 'true',
-        premium_badge_label: premiumBadgeLabel || null,
+        is_premium: isPremium === true || isPremium === 'true' || tier === 'PREMIUM',
+        premium_badge_label: premiumBadgeLabel || (tier === 'PREMIUM' ? 'Premium' : null),
         highlight_color: highlightColor || null,
         featured_until: featuredUntil ? new Date(featuredUntil).toISOString() : null,
+        pricing_tier: tier,
+        price_amount: priceAmount,
+        payment_status: 'PAID', // Set to 'PENDING' once real payment gateway is wired
         is_for_students: isForStudents === true || isForStudents === 'true',
         is_internship: isInternship === true || isInternship === 'true',
         expires_at: expiresAt ? new Date(expiresAt).toISOString() : defaultExpiry.toISOString(),
@@ -310,6 +321,8 @@ const updateJob = async (req, res, next) => {
       isForStudents: 'is_for_students', isInternship: 'is_internship',
       isPremium: 'is_premium', premiumBadgeLabel: 'premium_badge_label',
       highlightColor: 'highlight_color', featuredUntil: 'featured_until',
+      pricingTier: 'pricing_tier', priceAmount: 'price_amount',
+      paymentStatus: 'payment_status',
     };
     const data = {};
     for (const [k, v] of Object.entries(req.body)) {

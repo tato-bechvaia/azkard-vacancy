@@ -12,6 +12,7 @@ const notificationRoutes = require('./routes/notification.routes');
 const companyBoxRoutes   = require('./routes/companyBox.routes');
 const chatRoutes         = require('./routes/chat.routes');
 const savedJobsRoutes    = require('./routes/savedJobs.routes');
+const paymentRoutes      = require('./routes/payment.routes');
 const { errorHandler }   = require('./middleware/error.middleware');
 const { expandAssetUrlsInJson, defaultBase } = require('./utils/publicUrl');
 
@@ -28,6 +29,10 @@ app.use(helmet({
 }));
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(morgan('dev'));
+
+// Stripe webhook needs raw body — must be registered BEFORE express.json()
+app.use('/api/payments/webhook/stripe', express.raw({ type: 'application/json' }));
+
 app.use(express.json());
 
 app.use((req, res, next) => {
@@ -48,6 +53,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/company-boxes', companyBoxRoutes);
 app.use('/api/chat',         chatRoutes);
 app.use('/api/saved-jobs',  savedJobsRoutes);
+app.use('/api/payments',    paymentRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 app.use(errorHandler);

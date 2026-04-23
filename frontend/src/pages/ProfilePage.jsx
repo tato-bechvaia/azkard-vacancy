@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../api/axios';
 import { assetUrl } from '../utils/assetUrl';
 import { useAuth } from '../store/AuthContext';
@@ -40,6 +40,7 @@ const SELECT_CLS = 'h-10 bg-surface-50 border border-surface-200 rounded-lg px-3
 export default function ProfilePage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [activePanel, setActivePanel] = useState(user?.role === 'EMPLOYER' ? 'jobs' : 'applications');
 
   const [jobs, setJobs]                       = useState([]);
@@ -50,12 +51,13 @@ export default function ProfilePage() {
   const [avatarLoadError, setAvatarLoadError] = useState(false);
   const [form, setForm]                       = useState({});
   const [message, setMessage]                 = useState('');
+  const [paying, setPaying]                   = useState(false);
   const [showJobForm, setShowJobForm]         = useState(false);
   const [jobForm, setJobForm]                 = useState({
     title: '', description: '', location: '',
     salaryMin: '', jobRegime: 'FULL_TIME',
     experience: 'NONE', applicationMethod: 'CV_ONLY',
-    category: 'OTHER',
+    category: 'OTHER', pricingTier: 'USUAL',
   });
 
   // CV Boxes state (employer)
@@ -74,7 +76,24 @@ export default function ProfilePage() {
     }).catch(() => {});
 
     if (user.role === 'EMPLOYER') {
-      api.get('/jobs/mine').then(({ data }) => setJobs(data)).catch(() => {});
+      const fetchJobs = () => api.get('/jobs/mine').then(({ data }) => setJobs(data)).catch(() => {});
+
+      const paymentResult  = searchParams.get('payment');
+      const sessionId      = searchParams.get('session_id');
+      const cancelledJobId = searchParams.get('jobId');
+
+      if (paymentResult === 'success' && sessionId) {
+        api.get('/payments/session/' + sessionId)
+          .then(() => { setMessage('გადახდა წარმატებულია! ვაკანსია განთავსდა.'); fetchJobs(); })
+          .catch(() => { setMessage('გადახდა დასტურდება...'); fetchJobs(); });
+      } else if (paymentResult === 'cancelled') {
+        setMessage('გადახდა გაუქმდა. ვაკანსია არ განთავსებულა.');
+        if (cancelledJobId) api.delete('/payments/cancel-job/' + cancelledJobId).catch(() => {});
+        fetchJobs();
+      } else {
+        fetchJobs();
+      }
+
       api.get('/profiles/me').then(({ data }) => {
         if (data.id) api.get('/company-boxes/' + data.id).then(r => setMyBoxes(r.data)).catch(() => {});
       }).catch(() => {});
@@ -99,18 +118,14 @@ export default function ProfilePage() {
   const handlePostJob = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/jobs', jobForm);
-      setShowJobForm(false);
-      setMessage('ვაკანსია გამოქვეყნდა!');
-      const { data } = await api.get('/jobs/mine');
-      setJobs(data);
-      setJobForm({
-        title: '', description: '', location: '',
-        salaryMin: '', jobRegime: 'FULL_TIME',
-        experience: 'NONE', applicationMethod: 'CV_ONLY',
-        category: 'OTHER',
+      setPaying(true);
+      const { data } = await api.post('/payments/create-session', {
+        ...jobForm,
+        salary: jobForm.salaryMin,
       });
+      window.location.href = data.url;
     } catch (err) {
+      setPaying(false);
       setMessage(err.response?.data?.message || 'შეცდომა');
     }
   };
@@ -430,9 +445,61 @@ export default function ProfilePage() {
                       </select>
                     </div>
                   </div>
-                  <div className='pt-1'>
-                    <button type='submit' className='h-10 px-6 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-[13px] font-medium transition-colors duration-150'>
-                      გამოქვეყნება
+                  {/* Pricing tier */}
+                  <div>
+                    <label className='text-[11.5px] text-gray-500 block mb-2 font-medium'>განთავსების პაკეტი</label>
+                    <div className='grid grid-cols-2 gap-3'>
+                      {[
+                        { tier: 'USUAL',   price: 35, label: 'სტანდარტული', perks: ['ძებნაში გამოჩნდება', '30 დღე', 'განაცხადების მართვა'] },
+                        { tier: 'PREMIUM', price: 65, label: 'პრემიუმ',     perks: ['კარუსელში + პირველად', 'Premium ბეჯი', '30 დღე'] },
+                      ].map(({ tier, price, label, perks }) => (
+                        <button
+                          key={tier}
+                          type='button'
+                          onClick={() => setJobForm(p => ({ ...p, pricingTier: tier }))}
+                          className={[
+                            'relative rounded-xl border-2 p-3.5 text-left transition-all duration-150',
+                            jobForm.pricingTier === tier
+                              ? tier === 'PREMIUM'
+                                ? 'border-amber-400 bg-amber-50'
+                                : 'border-brand-400 bg-brand-50'
+                              : 'border-gray-100 bg-white hover:border-gray-200',
+                          ].join(' ')}
+                        >
+                          {tier === 'PREMIUM' && (
+                            <span className='absolute -top-2 left-3 bg-amber-400 text-white text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wider uppercase'>Premium</span>
+                          )}
+                          {jobForm.pricingTier === tier && (
+                            <span className={[
+                              'absolute top-3 right-3 w-3.5 h-3.5 rounded-full flex items-center justify-center',
+                              tier === 'PREMIUM' ? 'bg-amber-400' : 'bg-brand-500',
+                            ].join(' ')}>
+                              <svg className='w-2 h-2 text-white' fill='none' viewBox='0 0 10 10'>
+                                <path d='M2 5l2.5 2.5L8 3' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round'/>
+                              </svg>
+                            </span>
+                          )}
+                          <p className='text-[15px] font-bold text-gray-900'>{price} ₾</p>
+                          <p className='text-[12px] font-medium text-gray-600 mt-0.5'>{label}</p>
+                          <ul className='mt-1.5 space-y-0.5'>
+                            {perks.map(p => (
+                              <li key={p} className='text-[11px] text-gray-400'>✓ {p}</li>
+                            ))}
+                          </ul>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className='pt-1 flex items-center justify-between'>
+                    <p className='text-[12px] text-gray-400'>
+                      სულ: <span className='font-semibold text-gray-700'>{jobForm.pricingTier === 'PREMIUM' ? '65 ₾' : '35 ₾'}</span>
+                    </p>
+                    <button
+                      type='submit'
+                      disabled={paying}
+                      className='h-10 px-6 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl text-[13px] font-medium transition-colors duration-150'>
+                      {paying ? 'გადამისამართება...' : 'გადახდა და განთავსება'}
                     </button>
                   </div>
                 </form>
@@ -440,39 +507,53 @@ export default function ProfilePage() {
 
               <div className='flex flex-col gap-2'>
                 {jobs.map(job => (
-                  <div key={job.id} className='bg-white border border-gray-100 rounded-xl px-5 py-4 flex items-center gap-4'>
-                    <div className='flex-1 min-w-0'>
-                      <div className='flex items-center gap-2.5 mb-1'>
-                        <p className='font-medium text-[13.5px] text-gray-900 truncate'>{job.title}</p>
-                        <span className={'text-[10.5px] px-2 py-0.5 rounded-md border font-medium flex-shrink-0 ' +
-                          (job.status === 'HIRING'
-                            ? 'bg-teal-50 text-teal-700 border-teal-200'
-                            : 'bg-gray-100 text-gray-500 border-gray-200')}>
-                          {job.status === 'HIRING' ? 'აქტიური' : 'დახურული'}
-                        </span>
+                  <div key={job.id} className={[
+                    'bg-white border border-gray-100 rounded-xl px-5 py-4',
+                    job.paymentStatus === 'PENDING' ? 'opacity-70 border-l-4 border-l-amber-300' : '',
+                  ].join(' ')}>
+                    {job.paymentStatus === 'PENDING' && (
+                      <p className='text-[11px] text-amber-600 font-medium mb-2'>⏳ გადახდა არ დასრულებულა — ვაკანსია არ ჩანს სხვებისთვის</p>
+                    )}
+                    <div className='flex items-center gap-4'>
+                      <div className='flex-1 min-w-0'>
+                        <div className='flex items-center gap-2.5 mb-1'>
+                          <p className='font-medium text-[13.5px] text-gray-900 truncate'>{job.title}</p>
+                          <span className={'text-[10.5px] px-2 py-0.5 rounded-md border font-medium flex-shrink-0 ' +
+                            (job.status === 'HIRING'
+                              ? 'bg-teal-50 text-teal-700 border-teal-200'
+                              : 'bg-gray-100 text-gray-500 border-gray-200')}>
+                            {job.status === 'HIRING' ? 'აქტიური' : 'დახურული'}
+                          </span>
+                          {job.pricingTier === 'PREMIUM' && (
+                            <span className='text-[9px] px-1.5 py-0.5 rounded-full bg-amber-400 text-white font-bold uppercase tracking-wide flex-shrink-0'>
+                              Premium
+                            </span>
+                          )}
+                        </div>
+                        <p className='text-[12px] text-gray-400'>
+                          {(job.salaryMin || 0).toLocaleString()} ₾
+                          {job.location ? ' · ' + job.location : ''}
+                          {' · '}ნახვა: {job.views}
+                          {' · '}განაცხადი: {job._count?.applications || 0}
+                          {' · '}{job.priceAmount || 35} ₾ გადახდილი
+                        </p>
                       </div>
-                      <p className='text-[12px] text-gray-400'>
-                        {job.salaryMin.toLocaleString()} ₾
-                        {job.location ? ' · ' + job.location : ''}
-                        {' · '}ნახვა: {job.views}
-                        {' · '}განაცხადი: {job._count?.applications || 0}
-                      </p>
-                    </div>
-                    <div className='flex items-center gap-3 flex-shrink-0'>
-                      <button onClick={() => viewApplicants(job)}
-                        className='text-[12px] text-brand-600 hover:text-brand-700 font-medium transition-colors duration-150'>
-                        განმცხადებლები
-                      </button>
-                      {job.status === 'HIRING' && (
-                        <button onClick={() => handleCloseJob(job.id)}
-                          className='text-[12px] text-gray-400 hover:text-gray-600 transition-colors duration-150'>
-                          დახურვა
+                      <div className='flex items-center gap-3 flex-shrink-0'>
+                        <button onClick={() => viewApplicants(job)}
+                          className='text-[12px] text-brand-600 hover:text-brand-700 font-medium transition-colors duration-150'>
+                          განმცხადებლები
                         </button>
-                      )}
-                      <button onClick={() => handleDeleteJob(job.id)}
-                        className='text-[12px] text-red-400 hover:text-red-600 transition-colors duration-150'>
-                        წაშლა
-                      </button>
+                        {job.status === 'HIRING' && job.paymentStatus === 'PAID' && (
+                          <button onClick={() => handleCloseJob(job.id)}
+                            className='text-[12px] text-gray-400 hover:text-gray-600 transition-colors duration-150'>
+                            დახურვა
+                          </button>
+                        )}
+                        <button onClick={() => handleDeleteJob(job.id)}
+                          className='text-[12px] text-red-400 hover:text-red-600 transition-colors duration-150'>
+                          წაშლა
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
