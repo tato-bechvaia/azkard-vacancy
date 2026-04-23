@@ -154,7 +154,7 @@ export default function JobsPage() {
       <Navbar />
 
       {/* ── Hero ────────────────────────────────────────────────────── */}
-      <div className='bg-gray-950 pt-14'>
+      <div className='bg-gray-950 pt-[5.25rem]'>
         <div className='max-w-6xl mx-auto px-6 pt-14 pb-12'>
           <p className='text-brand-400/70 text-[10.5px] font-medium tracking-[0.22em] uppercase mb-4'>
             Azkard · Job Board

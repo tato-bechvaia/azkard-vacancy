@@ -36,7 +36,7 @@ export default function SavedJobsPage() {
     <div className='min-h-screen bg-surface-50'>
       <Navbar />
 
-      <div className='max-w-3xl mx-auto pt-[4.5rem] px-5 pb-16'>
+      <div className='max-w-3xl mx-auto pt-[5.25rem] px-5 pb-16'>
         <div className='pt-8 mb-6'>
           <p className='text-[10.5px] tracking-[0.2em] uppercase text-gray-400 mb-1'>შენახული</p>
           <h1 className='font-display font-semibold text-[24px] text-gray-900 leading-tight'>

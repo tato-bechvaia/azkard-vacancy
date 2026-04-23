@@ -242,7 +242,7 @@ export default function ProfilePage() {
     <div className='min-h-screen bg-surface-50'>
       <Navbar />
 
-      <div className='max-w-5xl mx-auto pt-[4.5rem] px-5 pb-12 flex gap-5'>
+      <div className='max-w-5xl mx-auto pt-[5.25rem] px-5 pb-12 flex gap-5'>
 
         {/* ── Sidebar ─────────────────────────────────────── */}
         <aside className='w-[200px] flex-shrink-0 pt-5'>

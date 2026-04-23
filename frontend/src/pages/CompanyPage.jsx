@@ -75,7 +75,7 @@ export default function CompanyPage() {
       <Navbar />
 
       {/* ── Hero ─────────────────────────────────────────── */}
-      <div className='bg-gray-950 pt-14'>
+      <div className='bg-gray-950 pt-[5.25rem]'>
         <div className='max-w-4xl mx-auto px-6 pt-10 pb-12'>
 
           <button
