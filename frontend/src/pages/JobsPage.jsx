@@ -205,7 +205,7 @@ export default function JobsPage() {
       </div>
 
       {/* ── Filter Bar ──────────────────────────────────────────────── */}
-      <div className='sticky top-14 z-40 bg-white border-b border-gray-100'>
+      <div className='sticky top-[5.25rem] z-40 bg-white border-b border-gray-100'>
         <div className='max-w-6xl mx-auto px-6'>
           <div className='flex items-center gap-0 py-2.5 overflow-x-auto scrollbar-hide'>
             {/* Regime */}
