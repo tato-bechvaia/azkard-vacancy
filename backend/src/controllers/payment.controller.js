@@ -1,7 +1,17 @@
 const Stripe   = require('stripe');
 const supabase = require('../supabase');
 
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+// Lazy init — prevents server crash if STRIPE_SECRET_KEY is not yet set
+let _stripe = null;
+const stripe = new Proxy({}, {
+  get: (_, prop) => {
+    if (!_stripe) {
+      if (!process.env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY is not set');
+      _stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+    }
+    return _stripe[prop];
+  },
+});
 
 const PRICES = { USUAL: 35, PREMIUM: 65 };
 
@@ -83,8 +93,8 @@ const createStripeSession = async (req, res, next) => {
         tier,
         employerId: String(employer.id),
       },
-      success_url: `${process.env.CLIENT_URL}/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:  `${process.env.CLIENT_URL}/dashboard?payment=cancelled&jobId=${job.id}`,
+      success_url: `${process.env.CLIENT_URL}/profile?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:  `${process.env.CLIENT_URL}/profile?payment=cancelled&jobId=${job.id}`,
     });
 
     // 4 — Record in payments table
@@ -106,7 +116,7 @@ const createStripeSession = async (req, res, next) => {
 // POST /api/payments/webhook/stripe
 // Stripe calls this after payment — MUST use raw body (configured in app.js)
 // ---------------------------------------------------------------------------
-const stripeWebhook = async (req, res, next) => {
+const stripeWebhook = async (req, res) => {
   const sig    = req.headers['stripe-signature'];
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
 
