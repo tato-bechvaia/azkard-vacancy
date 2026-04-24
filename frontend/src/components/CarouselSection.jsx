@@ -193,8 +193,7 @@ function JobCard({ job, visible, delay, width, dark, navigate }) {
         <div className='flex items-start justify-between gap-2 mb-3'>
           <CompanyAvatar company={job.employer} size='sm' />
           <span className={`font-semibold text-[13px] flex-shrink-0 ${salaryColor}`}>
-            {job.salaryMin.toLocaleString()}
-            {job.salaryMax ? '–' + job.salaryMax.toLocaleString() : ''} ₾
+            {job.salary.toLocaleString()} ₾
           </span>
         </div>
 

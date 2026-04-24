@@ -531,7 +531,7 @@ export default function ProfilePage() {
                           )}
                         </div>
                         <p className='text-[12px] text-gray-400'>
-                          {(job.salaryMin || 0).toLocaleString()} ₾
+                          {(job.salary || 0).toLocaleString()} ₾
                           {job.location ? ' · ' + job.location : ''}
                           {' · '}ნახვა: {job.views}
                           {' · '}განაცხადი: {job._count?.applications || 0}

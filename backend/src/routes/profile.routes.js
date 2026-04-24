@@ -80,7 +80,7 @@ router.get('/company/:slug', async (req, res, next) => {
       avatarUrl: employer.avatar_url,
       jobs: (jobs || []).map(j => ({
         id: j.id, title: j.title, location: j.location,
-        salaryMin: j.salary_min, salaryMax: j.salary_max,
+        salary: j.salary,
         jobRegime: j.job_regime, createdAt: j.created_at,
         _count: { applications: j.applications?.[0]?.count ?? 0 },
       })),

@@ -58,7 +58,7 @@ export default function EmployerDashboard() {
       setPaying(true);
       const { data } = await api.post('/payments/create-session', {
         ...form,
-        salaryMin: form.salary,
+        salary: form.salary,
       });
       // Redirect to Stripe Checkout
       window.location.href = data.url;
@@ -312,7 +312,7 @@ export default function EmployerDashboard() {
                   </div>
                   <p className='text-slate-500 text-sm'>{job.location || 'Remote'} · {job.jobRegime}</p>
                   <p className='text-slate-700 font-medium mt-1'>
-                    {(job.salaryMin || 0).toLocaleString()} ₾
+                    {(job.salary || 0).toLocaleString()} ₾
                   </p>
                 </div>
                 <div className='text-right space-y-1'>

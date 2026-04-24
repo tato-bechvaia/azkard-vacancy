@@ -112,8 +112,7 @@ model Job {
   title             String
   description       String
   location          String?
-  salaryMin         Int
-  salaryMax         Int?
+  salary            Int
   currency          String            @default("GEL")
   jobRegime         JobRegime
   jobPeriod         String?

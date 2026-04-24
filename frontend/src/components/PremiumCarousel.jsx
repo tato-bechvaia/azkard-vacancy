@@ -195,7 +195,7 @@ function PremiumCard({ job, visible, delay, width, navigate }) {
           <div className='flex items-end justify-between'>
             <div>
               <span className='font-display font-bold text-[15px] text-white'>
-                {job.salaryMin.toLocaleString()}{job.salaryMax ? '–' + job.salaryMax.toLocaleString() : ''}
+                {job.salary.toLocaleString()}
                 <span className='text-amber-400 ml-0.5 text-[13px]'>₾</span>
               </span>
               {posted && expiry && (

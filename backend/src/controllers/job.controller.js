@@ -22,8 +22,7 @@ const formatJob = (j) => {
     title: j.title,
     description: j.description,
     location: j.location,
-    salaryMin: j.salary_min,
-    salaryMax: j.salary_max,
+    salary: j.salary,
     currency: j.currency,
     jobRegime: j.job_regime,
     jobPeriod: j.job_period,
@@ -75,7 +74,7 @@ const listJobs = async (req, res, next) => {
 
     const {
       search, location, regime, experience, category,
-      salaryMin, salaryMax, page = 1, limit = 10,
+      salaryMin, salaryMax, sort = 'newest', page = 1, limit = 10,
     } = req.query;
     const now = new Date();
     const todayStart = new Date(now);
@@ -95,10 +94,14 @@ const listJobs = async (req, res, next) => {
     const applySharedFilters = (query) => {
       query = applyActiveFilter(query, now);
       if (location) query = query.ilike('location', `%${location}%`);
-      if (regime)   query = query.eq('job_regime', regime);
+      if (regime) {
+        const regimes = regime.split(',').filter(Boolean);
+        if (regimes.length === 1) query = query.eq('job_regime', regimes[0]);
+        else if (regimes.length > 1) query = query.in('job_regime', regimes);
+      }
       if (experience) query = query.eq('experience', experience);
-      if (salaryMin)  query = query.gte('salary_min', +salaryMin);
-      if (salaryMax)  query = query.lte('salary_min', +salaryMax);
+      if (salaryMin) query = query.gte('salary', +salaryMin);
+      if (salaryMax) query = query.lte('salary', +salaryMax);
       if (search) {
         if (searchEmpIds.length > 0) {
           query = query.or(`title.ilike.%${search}%,employer_profile_id.in.(${searchEmpIds.join(',')})`);
@@ -133,9 +136,15 @@ const listJobs = async (req, res, next) => {
       ).order('created_at', { ascending: false }).limit(20),
 
       // Standard paginated jobs
-      applySharedFilters(
-        supabase.from('jobs').select(EMPLOYER_SELECT).eq('is_premium', false)
-      ).order('created_at', { ascending: false }).range(skip, skip + +limit - 1),
+      (() => {
+        let q = applySharedFilters(
+          supabase.from('jobs').select(EMPLOYER_SELECT).eq('is_premium', false)
+        );
+        if (sort === 'salary_desc') q = q.order('salary', { ascending: false});
+        else if (sort === 'salary_asc') q = q.order('salary', { ascending: true });
+        else q = q.order('created_at', { ascending: false });
+        return q.range(skip, skip + +limit - 1);
+      })(),
 
       // Total standard count
       applySharedFilters(
@@ -154,7 +163,7 @@ const listJobs = async (req, res, next) => {
 
       // Carousel: Top Salaries
       applyActiveFilter(supabase.from('jobs').select(EMPLOYER_SELECT), now)
-        .order('salary_min', { ascending: false }).limit(CAROUSEL_TAKE),
+        .order('salary', { ascending: false}).limit(CAROUSEL_TAKE),
 
       // Carousel: Today's Vacancies
       applyActiveFilter(supabase.from('jobs').select(EMPLOYER_SELECT), now)
@@ -257,7 +266,7 @@ const getJob = async (req, res, next) => {
 const createJob = async (req, res, next) => {
   try {
     const {
-      title, description, location, salaryMin, salaryMax, jobRegime, jobPeriod,
+      title, description, location, salary, jobRegime, jobPeriod,
       experience, applicationMethod, category,
       isPremium, premiumBadgeLabel, highlightColor, featuredUntil,
       isForStudents, isInternship, expiresAt,
@@ -283,8 +292,7 @@ const createJob = async (req, res, next) => {
         title,
         description,
         location: location || null,
-        salary_min: +salaryMin,
-        salary_max: salaryMax ? +salaryMax : null,
+        salary: +salary,
         job_period: jobPeriod || null,
         job_regime: jobRegime,
         experience: experience || 'NONE',
@@ -315,7 +323,7 @@ const updateJob = async (req, res, next) => {
   try {
     // Convert camelCase body keys to snake_case for Supabase
     const map = {
-      salaryMin: 'salary_min', salaryMax: 'salary_max',
+      salary: 'salary',
       jobRegime: 'job_regime', jobPeriod: 'job_period',
       applicationMethod: 'application_method', expiresAt: 'expires_at',
       isForStudents: 'is_for_students', isInternship: 'is_internship',

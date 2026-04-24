@@ -72,7 +72,7 @@ const listSavedJobs = async (req, res, next) => {
     // Step 2: fetch job details (simple join to employer_profiles)
     const { data: jobs, error: jobsError } = await supabase
       .from('jobs')
-      .select('id, title, salary_min, salary_max, currency, location, job_regime, category, status, employer_profile_id')
+      .select('id, title, salary, currency, location, job_regime, category, status, employer_profile_id')
       .in('id', jobIds);
     if (jobsError) throw jobsError;
 
@@ -97,7 +97,7 @@ const listSavedJobs = async (req, res, next) => {
         savedAt: s.created_at,
         job: {
           id: j.id, title: j.title,
-          salaryMin: j.salary_min, salaryMax: j.salary_max, currency: j.currency,
+          salary: j.salary, currency: j.currency,
           location: j.location, jobRegime: j.job_regime, category: j.category, status: j.status,
           employer: emp ? { companyName: emp.company_name, avatarUrl: emp.avatar_url, logoUrl: emp.logo_url } : null,
         },

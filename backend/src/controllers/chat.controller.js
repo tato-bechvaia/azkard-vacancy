@@ -24,7 +24,7 @@ Rules:
 async function buildPlatformContext() {
   const { data: jobs } = await supabase
     .from('jobs')
-    .select('id, title, salary_min, salary_max, currency, location, job_regime, category, employer_profiles!employer_profile_id(company_name)')
+    .select('id, title, salary, currency, location, job_regime, category, employer_profiles!employer_profile_id(company_name)')
     .eq('status', 'HIRING')
     .order('created_at', { ascending: false })
     .limit(80);
@@ -32,9 +32,7 @@ async function buildPlatformContext() {
   const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
 
   const jobLines = (jobs || []).map(j => {
-    const salary = j.salary_max
-      ? `${j.salary_min}–${j.salary_max} ${j.currency}`
-      : `${j.salary_min}+ ${j.currency}`;
+    const salary = `${j.salary} ${j.currency}`;
     const location = j.location || 'not specified';
     const url = `${clientUrl}/jobs/${j.id}`;
     return `- [${j.title}](${url}) | Company: ${j.employer_profiles?.company_name} | Salary: ${salary} | Location: ${location} | Regime: ${j.job_regime} | Category: ${j.category}`;

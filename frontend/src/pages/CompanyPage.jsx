@@ -157,7 +157,7 @@ export default function CompanyPage() {
                   {job.title}
                 </h3>
                 <p className='font-semibold text-[14px] text-gray-800 flex-shrink-0'>
-                  {job.salaryMin?.toLocaleString()} ₾
+                  {job.salary?.toLocaleString()} ₾
                 </p>
               </div>
 

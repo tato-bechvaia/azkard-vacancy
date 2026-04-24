@@ -23,7 +23,7 @@ const PRICES = { USUAL: 35, PREMIUM: 65 };
 const createStripeSession = async (req, res, next) => {
   try {
     const {
-      title, description, location, salary, salaryMin, salaryMax,
+      title, description, location, salary,
       jobRegime, jobPeriod, experience, applicationMethod, category,
       isForStudents, isInternship, startDate, pricingTier,
     } = req.body;
@@ -49,8 +49,7 @@ const createStripeSession = async (req, res, next) => {
         title,
         description,
         location:           location  || null,
-        salary_min:         +(salary  || salaryMin),
-        salary_max:         salaryMax ? +salaryMax : null,
+        salary:             +salary,
         job_regime:         jobRegime,
         job_period:         jobPeriod || null,
         experience:         experience         || 'NONE',

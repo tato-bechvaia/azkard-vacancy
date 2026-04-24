@@ -96,7 +96,7 @@ export default function SavedJobsPage() {
                     {job.employer?.companyName}
                     {job.location ? ' · ' + job.location : ''}
                     {' · '}
-                    {job.salaryMin?.toLocaleString()} {job.salaryMax ? '– ' + job.salaryMax.toLocaleString() : '+'} {job.currency}
+                    {job.salary?.toLocaleString()} {job.currency}
                   </p>
                   <div className='flex items-center gap-2 mt-1.5'>
                     {job.jobRegime && (

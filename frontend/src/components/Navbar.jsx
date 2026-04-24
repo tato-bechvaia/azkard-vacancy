@@ -6,12 +6,16 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  const showBanner = import.meta.env.VITE_SHOW_TEST_BANNER === 'true';
+
   return (
     <>
-      <div className='fixed top-0 left-0 right-0 z-[60] bg-amber-400 text-gray-900 text-center text-[13px] font-semibold py-2 px-4 tracking-wide'>
-        ⚠️ საიტი ტესტირების რეჟიმშია — ყველა ვაკანსია ტესტურია და არ წარმოადგენს რეალურ განცხადებებს
-      </div>
-      <nav className='fixed top-7 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 h-14 flex items-center px-6 justify-between'>
+      {showBanner && (
+        <div className='fixed top-0 left-0 right-0 z-[60] bg-amber-400 text-gray-900 text-center text-[13px] font-semibold py-2 px-4 tracking-wide'>
+          ⚠️ საიტი ტესტირების რეჟიმშია — ყველა ვაკანსია ტესტურია და არ წარმოადგენს რეალურ განცხადებებს
+        </div>
+      )}
+      <nav className={`fixed ${showBanner ? 'top-7' : 'top-0'} left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 h-14 flex items-center px-6 justify-between`}>
 
         <div
           onClick={() => navigate('/')}
