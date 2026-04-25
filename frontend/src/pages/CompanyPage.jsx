@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { assetUrl } from '../utils/assetUrl';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
 import Navbar from '../components/Navbar';
 
@@ -139,18 +139,18 @@ export default function CompanyPage() {
       <div className='max-w-4xl mx-auto px-6 py-8'>
 
         <div className='flex items-center justify-between mb-5'>
-          <p className='font-semibold text-[14px] text-gray-900'>
+          <p className='font-semibold text-[15px] text-text-primary'>
             აქტიური ვაკანსიები
-            <span className='ml-2 font-normal text-[12.5px] text-gray-400'>({company.jobs.length})</span>
+            <span className='ml-2 font-normal text-[13px] text-text-secondary'>({company.jobs.length})</span>
           </p>
         </div>
 
         <div className='flex flex-col gap-2'>
           {company.jobs.map(job => (
-            <div
+            <Link
               key={job.id}
-              onClick={() => navigate('/jobs/' + job.id)}
-              className='bg-white border border-gray-100 rounded-xl p-5 cursor-pointer hover:border-gray-200 hover:shadow-card-md transition-all duration-200 group'>
+              to={'/jobs/' + job.id}
+              className='block bg-white border border-gray-100 rounded-xl p-5 cursor-pointer hover:border-gray-200 hover:shadow-card-md transition-all duration-200 group no-underline text-inherit'>
 
               <div className='flex items-start justify-between gap-4 mb-3'>
                 <h3 className='font-medium text-[14.5px] text-gray-900 group-hover:text-brand-600 transition-colors duration-150 leading-snug'>
@@ -190,7 +190,7 @@ export default function CompanyPage() {
                   {job._count?.applications || 0}
                 </span>
               </div>
-            </div>
+            </Link>
           ))}
 
           {company.jobs.length === 0 && (

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import CompanyAvatar from './CompanyAvatar';
 
 const REGIME_TAG = {
@@ -180,10 +180,10 @@ function JobCard({ job, visible, delay, width, dark, navigate }) {
     <div
       className='flex-shrink-0 pr-2.5 last:pr-0'
       style={{ width: `${width}%` }}>
-      <div
-        onClick={() => navigate('/jobs/' + job.id)}
+      <Link
+        to={'/jobs/' + job.id}
         className={[
-          'group cursor-pointer rounded-xl border p-4 transition-all duration-200',
+          'group block cursor-pointer rounded-xl border p-4 transition-all duration-200 no-underline text-inherit',
           cardBase,
           visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2',
         ].join(' ')}
@@ -244,7 +244,7 @@ function JobCard({ job, visible, delay, width, dark, navigate }) {
         {posted && expiry && (
           <p className={`text-[9.5px] ${metaColor}`}>{posted} – {expiry}</p>
         )}
-      </div>
+      </Link>
     </div>
   );
 }

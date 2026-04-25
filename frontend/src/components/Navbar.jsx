@@ -47,10 +47,10 @@ export default function Navbar() {
                 key={link.path}
                 onClick={() => navigate(link.path)}
                 className={[
-                  'h-8 px-3 rounded-lg text-[13px] font-medium transition-colors duration-150',
+                  'h-8 px-3 rounded-lg text-[13.5px] font-semibold transition-colors duration-150',
                   isActive(link.path)
                     ? 'bg-brand-50 text-brand-600'
-                    : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50',
+                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50',
                 ].join(' ')}
               >
                 {link.label}
@@ -60,10 +60,10 @@ export default function Navbar() {
               <button
                 onClick={() => navigate('/saved')}
                 className={[
-                  'h-8 px-3 rounded-lg text-[13px] font-medium transition-colors duration-150',
+                  'h-8 px-3 rounded-lg text-[13.5px] font-semibold transition-colors duration-150',
                   isActive('/saved')
                     ? 'bg-brand-50 text-brand-600'
-                    : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50',
+                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50',
                 ].join(' ')}
               >
                 შენახული

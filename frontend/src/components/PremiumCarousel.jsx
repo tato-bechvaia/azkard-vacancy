@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import CompanyAvatar from './CompanyAvatar';
 
 const REGIME_LABELS = { REMOTE: 'დისტანციური', HYBRID: 'ჰიბრიდული', FULL_TIME: 'ადგილზე' };
@@ -139,10 +139,10 @@ function PremiumCard({ job, visible, delay, width, navigate }) {
     <div
       className='flex-shrink-0 pr-2.5 last:pr-0'
       style={{ width: `${width}%` }}>
-      <div
-        onClick={() => navigate('/jobs/' + job.id)}
+      <Link
+        to={'/jobs/' + job.id}
         className={[
-          'group relative cursor-pointer rounded-xl overflow-hidden',
+          'group relative block cursor-pointer rounded-xl overflow-hidden no-underline text-inherit',
           'bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950',
           'border border-white/[0.06]',
           'hover:border-amber-400/25 hover:shadow-[0_6px_24px_rgba(251,191,36,0.10)]',
@@ -210,7 +210,7 @@ function PremiumCard({ job, visible, delay, width, navigate }) {
             </span>
           </div>
         </div>
-      </div>
+      </Link>
     </div>
   );
 }

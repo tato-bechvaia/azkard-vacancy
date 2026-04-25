@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../store/AuthContext';
 import { useSavedJobs } from '../../store/SavedJobsContext';
 import { Card, Badge, Tag } from '../ui';
@@ -54,11 +54,10 @@ export default function JobListCard({ job }) {
   const isPremiumPlus = job.pricingTier === 'PREMIUM_PLUS';
   const isPremium     = job.pricingTier === 'PREMIUM';
 
-  return (
+  const cardContent = (
     <Card
       variant={expired ? 'default' : 'interactive'}
       padding='md'
-      onClick={() => !expired && navigate('/jobs/' + job.id)}
       className={[
         expired ? 'opacity-50 cursor-not-allowed' : 'group',
         isPremiumPlus ? 'border-brand-500/15 hover:border-brand-400/30' : '',
@@ -149,5 +148,13 @@ export default function JobListCard({ job }) {
         </div>
       </div>
     </Card>
+  );
+
+  if (expired) return cardContent;
+
+  return (
+    <Link to={'/jobs/' + job.id} className='block no-underline text-inherit'>
+      {cardContent}
+    </Link>
   );
 }

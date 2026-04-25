@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../store/AuthContext';
 import Navbar from '../components/Navbar';
@@ -79,9 +79,9 @@ export default function SavedJobsPage() {
                 className='bg-white border border-gray-100 rounded-xl px-5 py-4 flex items-center gap-4 hover:border-gray-200 transition-colors duration-150 group'>
                 <CompanyAvatar company={job.employer} size='sm' />
 
-                <div
-                  className='flex-1 min-w-0 cursor-pointer'
-                  onClick={() => navigate('/jobs/' + job.id)}>
+                <Link
+                  to={'/jobs/' + job.id}
+                  className='flex-1 min-w-0 cursor-pointer no-underline text-inherit'>
                   <div className='flex items-center gap-2 mb-0.5'>
                     <p className='text-[13.5px] font-medium text-gray-900 group-hover:text-brand-600 transition-colors duration-150 truncate'>
                       {job.title}
@@ -113,7 +113,7 @@ export default function SavedJobsPage() {
                       შენახულია {new Date(savedAt).toLocaleDateString()}
                     </span>
                   </div>
-                </div>
+                </Link>
 
                 <button
                   onClick={() => unsave(job.id)}

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import CompanyAvatar from '../CompanyAvatar';
 import { REGIME_LABELS, fmtDate } from '../../utils/constants';
 
@@ -22,14 +22,13 @@ function useVisibleCount() {
 }
 
 function PremiumPlusCard({ job, width }) {
-  const navigate = useNavigate();
   const posted = fmtDate(job.createdAt);
 
   return (
     <div className='flex-shrink-0 pr-3 last:pr-0' style={{ width: `${width}%` }}>
-      <div
-        onClick={() => navigate('/jobs/' + job.id)}
-        className='group relative cursor-pointer rounded-2xl overflow-hidden bg-surface-50 border border-brand-500/20 hover:border-brand-400/40 transition-all duration-300 hover:shadow-glow-brand'
+      <Link
+        to={'/jobs/' + job.id}
+        className='group relative block cursor-pointer rounded-2xl overflow-hidden bg-surface-50 border border-brand-500/20 hover:border-brand-400/40 transition-all duration-300 hover:shadow-glow-brand no-underline text-inherit'
       >
         {/* Top gradient accent */}
         <div className='absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-500 via-amber-400 to-brand-500 opacity-70 group-hover:opacity-100 transition-opacity duration-300' />
@@ -85,7 +84,7 @@ function PremiumPlusCard({ job, width }) {
             </span>
           </div>
         </div>
-      </div>
+      </Link>
     </div>
   );
 }
