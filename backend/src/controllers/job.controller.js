@@ -17,6 +17,8 @@ const formatJob = (j) => {
     ? (j.applications[0]?.count ?? 0)
     : 0;
 
+  const tier = j.pricing_tier || 'USUAL';
+
   return {
     id: j.id,
     title: j.title,
@@ -40,7 +42,8 @@ const formatJob = (j) => {
     premiumBadgeLabel: j.premium_badge_label,
     highlightColor: j.highlight_color,
     featuredUntil: j.featured_until,
-    pricingTier: j.pricing_tier || 'USUAL',
+    pricingTier: tier,
+    tierPriority: j.tier_priority ?? (tier === 'PREMIUM_PLUS' ? 2 : tier === 'PREMIUM' ? 1 : 0),
     priceAmount: j.price_amount || 35,
     paymentStatus: j.payment_status || 'PAID',
     employer: ep ? {
@@ -120,6 +123,7 @@ const listJobs = async (req, res, next) => {
     const skip = (+page - 1) * +limit;
 
     const [
+      { data: premiumPlusJobs },
       { data: premiumJobs },
       { data: standardJobs },
       { count: total },
@@ -129,13 +133,19 @@ const listJobs = async (req, res, next) => {
       { data: carouselToday },
       { data: carouselTop },
     ] = await Promise.all([
-      // Premium jobs
+      // Premium+ jobs (tier_priority = 2)
       applySharedFilters(
-        supabase.from('jobs').select(EMPLOYER_SELECT).eq('is_premium', true)
+        supabase.from('jobs').select(EMPLOYER_SELECT).eq('pricing_tier', 'PREMIUM_PLUS')
           .or(`featured_until.is.null,featured_until.gte.${now.toISOString()}`)
       ).order('created_at', { ascending: false }).limit(20),
 
-      // Standard paginated jobs
+      // Premium jobs (tier_priority = 1)
+      applySharedFilters(
+        supabase.from('jobs').select(EMPLOYER_SELECT).eq('pricing_tier', 'PREMIUM')
+          .or(`featured_until.is.null,featured_until.gte.${now.toISOString()}`)
+      ).order('created_at', { ascending: false }).limit(20),
+
+      // Standard paginated jobs (excludes Premium+ and Premium)
       (() => {
         let q = applySharedFilters(
           supabase.from('jobs').select(EMPLOYER_SELECT).eq('is_premium', false)
@@ -182,8 +192,9 @@ const listJobs = async (req, res, next) => {
       .sort((a, b) => b.score - a.score);
 
     const result = {
-      premiumJobs:   withExpiry((premiumJobs  || []).map(formatJob)),
-      standardJobs:  withExpiry((standardJobs || []).map(formatJob)),
+      premiumPlusJobs: withExpiry((premiumPlusJobs || []).map(formatJob)),
+      premiumJobs:     withExpiry((premiumJobs  || []).map(formatJob)),
+      standardJobs:    withExpiry((standardJobs || []).map(formatJob)),
       total:  total || 0,
       page:   +page,
       pages:  Math.ceil((total || 0) / +limit),
@@ -273,8 +284,9 @@ const createJob = async (req, res, next) => {
       pricingTier,
     } = req.body;
 
-    const tier = pricingTier === 'PREMIUM' ? 'PREMIUM' : 'USUAL';
-    const priceAmount = tier === 'PREMIUM' ? 65 : 35;
+    const tier = pricingTier === 'PREMIUM_PLUS' ? 'PREMIUM_PLUS' : pricingTier === 'PREMIUM' ? 'PREMIUM' : 'USUAL';
+    const priceAmount = tier === 'PREMIUM_PLUS' ? 95 : tier === 'PREMIUM' ? 65 : 35;
+    const tierPriority = tier === 'PREMIUM_PLUS' ? 2 : tier === 'PREMIUM' ? 1 : 0;
 
     const { data: employer } = await supabase
       .from('employer_profiles')
@@ -299,8 +311,9 @@ const createJob = async (req, res, next) => {
         application_method: applicationMethod || 'CV_ONLY',
         category: category || 'OTHER',
         employer_profile_id: employer.id,
-        is_premium: isPremium === true || isPremium === 'true' || tier === 'PREMIUM',
-        premium_badge_label: premiumBadgeLabel || (tier === 'PREMIUM' ? 'Premium' : null),
+        is_premium: isPremium === true || isPremium === 'true' || tier === 'PREMIUM' || tier === 'PREMIUM_PLUS',
+        premium_badge_label: premiumBadgeLabel || (tier === 'PREMIUM_PLUS' ? 'Premium+' : tier === 'PREMIUM' ? 'Premium' : null),
+        tier_priority: tierPriority,
         highlight_color: highlightColor || null,
         featured_until: featuredUntil ? new Date(featuredUntil).toISOString() : null,
         pricing_tier: tier,

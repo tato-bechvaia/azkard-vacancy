@@ -13,7 +13,7 @@ const stripe = new Proxy({}, {
   },
 });
 
-const PRICES = { USUAL: 35, PREMIUM: 65 };
+const PRICES = { USUAL: 35, PREMIUM: 65, PREMIUM_PLUS: 95 };
 
 // ---------------------------------------------------------------------------
 // POST /api/payments/create-session
@@ -28,7 +28,7 @@ const createStripeSession = async (req, res, next) => {
       isForStudents, isInternship, startDate, pricingTier,
     } = req.body;
 
-    const tier        = pricingTier === 'PREMIUM' ? 'PREMIUM' : 'USUAL';
+    const tier        = pricingTier === 'PREMIUM_PLUS' ? 'PREMIUM_PLUS' : pricingTier === 'PREMIUM' ? 'PREMIUM' : 'USUAL';
     const priceAmount = PRICES[tier];
 
     // 1 — Look up employer
@@ -56,8 +56,9 @@ const createStripeSession = async (req, res, next) => {
         application_method: applicationMethod  || 'CV_ONLY',
         category:           category           || 'OTHER',
         employer_profile_id: employer.id,
-        is_premium:          tier === 'PREMIUM',
-        premium_badge_label: tier === 'PREMIUM' ? 'Premium' : null,
+        is_premium:          tier === 'PREMIUM' || tier === 'PREMIUM_PLUS',
+        premium_badge_label: tier === 'PREMIUM_PLUS' ? 'Premium+' : tier === 'PREMIUM' ? 'Premium' : null,
+        tier_priority:       tier === 'PREMIUM_PLUS' ? 2 : tier === 'PREMIUM' ? 1 : 0,
         is_for_students:    isForStudents === true || isForStudents === 'true',
         is_internship:      isInternship  === true || isInternship  === 'true',
         expires_at:         startDate
@@ -82,8 +83,8 @@ const createStripeSession = async (req, res, next) => {
           currency:     'gel',
           unit_amount:  priceAmount * 100,   // tetri (100 tetri = 1 GEL)
           product_data: {
-            name:        tier === 'PREMIUM' ? 'Azkard — Premium ვაკანსია' : 'Azkard — სტანდარტული ვაკანსია',
-            description: `${title} · ${tier === 'PREMIUM' ? 'პრემიუმ განთავსება + კარუსელი' : 'სტანდარტული განთავსება'} · 30 დღე`,
+            name:        tier === 'PREMIUM_PLUS' ? 'Azkard — Premium+ ვაკანსია' : tier === 'PREMIUM' ? 'Azkard — Premium ვაკანსია' : 'Azkard — სტანდარტული ვაკანსია',
+            description: `${title} · ${tier === 'PREMIUM_PLUS' ? 'Premium+ კარუსელი + პრიორიტეტი' : tier === 'PREMIUM' ? 'პრემიუმ განთავსება + კარუსელი' : 'სტანდარტული განთავსება'} · 30 დღე`,
           },
         },
       }],

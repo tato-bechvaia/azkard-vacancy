@@ -32,9 +32,9 @@ const STATUS_GEO = {
 
 const CAT_LABEL_GEO = { IT:'IT', SALES:'გაყიდვები', MARKETING:'მარკეტინგი', FINANCE:'ფინანსები', DESIGN:'დიზაინი', MANAGEMENT:'მენეჯმენტი', LOGISTICS:'ლოჯისტიკა', HEALTHCARE:'მედიცინა', EDUCATION:'განათლება', HOSPITALITY:'სტუმართმოყვარეობა', OTHER:'სხვა' };
 
-const INPUT = 'w-full h-10 bg-surface-50 border border-surface-200 rounded-lg px-3 text-[13px] text-gray-800 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100/60 transition-all duration-150 placeholder-gray-400';
-const TEXTAREA = 'w-full bg-surface-50 border border-surface-200 rounded-lg px-3 py-2.5 text-[13px] text-gray-800 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100/60 transition-all duration-150 resize-none placeholder-gray-400';
-const SELECT_CLS = 'h-10 bg-surface-50 border border-surface-200 rounded-lg px-3 text-[13px] text-gray-700 focus:outline-none focus:border-brand-400 transition-colors duration-150';
+const INPUT = 'w-full h-10 bg-white border border-gray-200 rounded-lg px-3 text-[13px] text-gray-900 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100/50 transition-all duration-150 placeholder-gray-400';
+const TEXTAREA = 'w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-[13px] text-gray-900 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100/50 transition-all duration-150 resize-none placeholder-gray-400';
+const SELECT_CLS = 'h-10 bg-white border border-gray-200 rounded-lg px-3 text-[13px] text-gray-800 focus:outline-none focus:border-brand-500 transition-colors duration-150';
 
 
 export default function ProfilePage() {
@@ -448,11 +448,12 @@ export default function ProfilePage() {
                   {/* Pricing tier */}
                   <div>
                     <label className='text-[11.5px] text-gray-500 block mb-2 font-medium'>განთავსების პაკეტი</label>
-                    <div className='grid grid-cols-2 gap-3'>
+                    <div className='grid grid-cols-3 gap-3'>
                       {[
-                        { tier: 'USUAL',   price: 35, label: 'სტანდარტული', perks: ['ძებნაში გამოჩნდება', '30 დღე', 'განაცხადების მართვა'] },
-                        { tier: 'PREMIUM', price: 65, label: 'პრემიუმ',     perks: ['კარუსელში + პირველად', 'Premium ბეჯი', '30 დღე'] },
-                      ].map(({ tier, price, label, perks }) => (
+                        { tier: 'USUAL',        price: 35, label: 'სტანდარტული', color: 'brand',  perks: ['ძებნაში გამოჩნდება', '30 დღე', 'განაცხადების მართვა'] },
+                        { tier: 'PREMIUM',      price: 65, label: 'პრემიუმ',     color: 'amber',  perks: ['კარუსელში გამოჩენა', 'Premium ბეჯი', 'პრიორიტეტი ძებნაში'] },
+                        { tier: 'PREMIUM_PLUS', price: 95, label: 'პრემიუმ+',    color: 'brand+', perks: ['Top კარუსელი', 'მაქს. პრიორიტეტი', 'Premium+ ბეჯი'] },
+                      ].map(({ tier, price, label, color, perks }) => (
                         <button
                           key={tier}
                           type='button'
@@ -460,19 +461,29 @@ export default function ProfilePage() {
                           className={[
                             'relative rounded-xl border-2 p-3.5 text-left transition-all duration-150',
                             jobForm.pricingTier === tier
-                              ? tier === 'PREMIUM'
-                                ? 'border-amber-400 bg-amber-50'
-                                : 'border-brand-400 bg-brand-50'
+                              ? tier === 'PREMIUM_PLUS'
+                                ? 'border-brand-500 bg-brand-50 shadow-md'
+                                : tier === 'PREMIUM'
+                                  ? 'border-amber-400 bg-amber-50'
+                                  : 'border-brand-400 bg-brand-50'
                               : 'border-gray-100 bg-white hover:border-gray-200',
                           ].join(' ')}
                         >
                           {tier === 'PREMIUM' && (
                             <span className='absolute -top-2 left-3 bg-amber-400 text-white text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wider uppercase'>Premium</span>
                           )}
+                          {tier === 'PREMIUM_PLUS' && (
+                            <span className='absolute -top-2 left-3 bg-brand-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wider uppercase flex items-center gap-1'>
+                              <svg width='8' height='8' viewBox='0 0 24 24' fill='currentColor' className='text-amber-300'>
+                                <path d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'/>
+                              </svg>
+                              Premium+
+                            </span>
+                          )}
                           {jobForm.pricingTier === tier && (
                             <span className={[
                               'absolute top-3 right-3 w-3.5 h-3.5 rounded-full flex items-center justify-center',
-                              tier === 'PREMIUM' ? 'bg-amber-400' : 'bg-brand-500',
+                              tier === 'PREMIUM_PLUS' ? 'bg-brand-600' : tier === 'PREMIUM' ? 'bg-amber-400' : 'bg-brand-500',
                             ].join(' ')}>
                               <svg className='w-2 h-2 text-white' fill='none' viewBox='0 0 10 10'>
                                 <path d='M2 5l2.5 2.5L8 3' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round'/>
@@ -493,7 +504,7 @@ export default function ProfilePage() {
 
                   <div className='pt-1 flex items-center justify-between'>
                     <p className='text-[12px] text-gray-400'>
-                      სულ: <span className='font-semibold text-gray-700'>{jobForm.pricingTier === 'PREMIUM' ? '65 ₾' : '35 ₾'}</span>
+                      სულ: <span className='font-semibold text-gray-700'>{jobForm.pricingTier === 'PREMIUM_PLUS' ? '95 ₾' : jobForm.pricingTier === 'PREMIUM' ? '65 ₾' : '35 ₾'}</span>
                     </p>
                     <button
                       type='submit'
@@ -524,6 +535,11 @@ export default function ProfilePage() {
                               : 'bg-gray-100 text-gray-500 border-gray-200')}>
                             {job.status === 'HIRING' ? 'აქტიური' : 'დახურული'}
                           </span>
+                          {job.pricingTier === 'PREMIUM_PLUS' && (
+                            <span className='text-[9px] px-1.5 py-0.5 rounded-full bg-brand-600 text-white font-bold uppercase tracking-wide flex-shrink-0'>
+                              Premium+
+                            </span>
+                          )}
                           {job.pricingTier === 'PREMIUM' && (
                             <span className='text-[9px] px-1.5 py-0.5 rounded-full bg-amber-400 text-white font-bold uppercase tracking-wide flex-shrink-0'>
                               Premium
@@ -631,7 +647,7 @@ export default function ProfilePage() {
                     <select
                       value={app.status}
                       onChange={e => updateStatus(app.id, e.target.value)}
-                      className='text-[12px] bg-surface-50 border border-surface-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-brand-400 flex-shrink-0 text-gray-700'>
+                      className='text-[12px] bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-brand-500 flex-shrink-0 text-gray-800'>
                       <option value='PENDING'>მოლოდინში</option>
                       <option value='REVIEWING'>განიხილება</option>
                       <option value='SHORTLISTED'>შორტლისტი</option>
@@ -711,7 +727,7 @@ export default function ProfilePage() {
                   <select
                     value={subCatFilter}
                     onChange={e => setSubCatFilter(e.target.value)}
-                    className='h-8 text-[12px] bg-surface-50 border border-surface-200 rounded-lg px-2.5 focus:outline-none focus:border-brand-400 text-gray-600'>
+                    className='h-8 text-[12px] bg-white border border-gray-200 rounded-lg px-2.5 focus:outline-none focus:border-brand-500 text-gray-800'>
                     <option value='ALL'>ყველა</option>
                     <option value='IT'>IT</option>
                     <option value='SALES'>გაყიდვები</option>

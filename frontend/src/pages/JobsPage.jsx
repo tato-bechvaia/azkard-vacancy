@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import api from '../api/axios';
 import { PageShell } from '../components/ui';
 import Hero          from '../components/home/Hero';
+import PremiumPlusCarousel from '../components/home/PremiumPlusCarousel';
 import PremiumStrip  from '../components/home/PremiumStrip';
 import FilterBar     from '../components/home/FilterBar';
 import MainJobList   from '../components/home/MainJobList';
@@ -20,13 +21,12 @@ export default function JobsPage() {
     () => (searchParams.get('regime') || '').split(',').filter(Boolean),
     [searchParams]
   );
-  const category   = searchParams.get('cat')    || '';   // single-select
+  const category   = searchParams.get('cat')    || '';
   const experience = searchParams.get('exp')    || '';
   const sort       = searchParams.get('sort')   || 'newest';
   const salaryMin  = searchParams.get('salMin') || '';
   const salaryMax  = searchParams.get('salMax') || '';
 
-  // categories array for API call + MainJobList results header
   const categories = useMemo(() => (category ? [category] : []), [category]);
 
   // ── URL update helper ─────────────────────────────────────────────────────
@@ -38,10 +38,8 @@ export default function JobsPage() {
     }, { replace: true });
   }, [setSearchParams]);
 
-  // ── Filter setters ────────────────────────────────────────────────────────
   const setSearch    = useCallback((v) => updateParam('q',      v), [updateParam]);
   const setLocation  = useCallback((v) => updateParam('loc',    v), [updateParam]);
-  // Atomic setter — avoids React Router clobbering when both are set in one tick
   const setSalaryRange = useCallback((min, max) => {
     setSearchParams(prev => {
       const next = new URLSearchParams(prev);
@@ -75,10 +73,11 @@ export default function JobsPage() {
   const filtersActive = activeCount > 0 || !!search;
 
   // ── Server data ───────────────────────────────────────────────────────────
-  const [premiumJobs,    setPremiumJobs]    = useState([]);
-  const [carInternships, setCarInternships] = useState([]);
+  const [premiumPlusJobs, setPremiumPlusJobs] = useState([]);
+  const [premiumJobs,     setPremiumJobs]     = useState([]);
+  const [carInternships,  setCarInternships]  = useState([]);
 
-  // ── Main listing ──────────────────────────────────────────────────────────
+  // ── Main listing (standard jobs) ──────────────────────────────────────────
   const [jobs,    setJobs]    = useState([]);
   const [total,   setTotal]   = useState(0);
   const [page,    setPage]    = useState(1);
@@ -90,21 +89,19 @@ export default function JobsPage() {
   const carouselDone = useRef(false);
   const loadingRef   = useRef(false);
 
-  // Stable string used as deps key — changes when any filter changes
   const filterKey = [
     search, location, regimes.join(','), category, experience, sort, salaryMin, salaryMax,
   ].join('|');
 
-  // Reset pagination + data when filters change
   useEffect(() => {
     setJobs([]);
+    setPremiumPlusJobs([]);
     setPremiumJobs([]);
     setPage(1);
     setHasMore(true);
     carouselDone.current = false;
-  }, [filterKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filterKey]);
 
-  // Fetch jobs
   useEffect(() => {
     if (abortRef.current) abortRef.current.abort();
     const controller = new AbortController();
@@ -115,36 +112,34 @@ export default function JobsPage() {
 
     api.get('/jobs', {
       params: {
-        search,
-        location,
-        regime:    regimes.join(','),
-        experience,
-        category,
-        salaryMin,
-        salaryMax,
-        sort,
-        page,
-        limit: LIMIT,
+        search, location,
+        regime: regimes.join(','),
+        experience, category,
+        salaryMin, salaryMax, sort,
+        page, limit: LIMIT,
       },
       signal: controller.signal,
     })
       .then(({ data }) => {
         if (page === 1) {
+          setPremiumPlusJobs(data.premiumPlusJobs || []);
           setPremiumJobs(data.premiumJobs || []);
           if (!carouselDone.current && data.carousels) {
             setCarInternships(data.carousels.internships || []);
             carouselDone.current = true;
           }
         }
-        setJobs(prev => page === 1 ? (data.standardJobs || []) : [...prev, ...(data.standardJobs || [])]);
+        // Main list = Premium + Standard (Premium+ is only in top carousel)
+        const premJobs = page === 1 ? (data.premiumJobs || []) : [];
+        const stdJobs  = data.standardJobs || [];
+        setJobs(prev => page === 1 ? [...premJobs, ...stdJobs] : [...prev, ...stdJobs]);
         setTotal(data.total);
         setHasMore(page < data.pages);
       })
       .catch(err => { if (err.code === 'ERR_CANCELED') return; })
       .finally(() => { setLoading(false); loadingRef.current = false; });
-  }, [filterKey, page]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filterKey, page]);
 
-  // Infinite scroll sentinel
   const sentinelRef = useCallback(node => {
     if (observerRef.current) observerRef.current.disconnect();
     if (!node) return;
@@ -164,7 +159,8 @@ export default function JobsPage() {
         total={total}
       />
 
-      <PremiumStrip jobs={premiumJobs} />
+      {/* Premium+ carousel — only Premium+ jobs */}
+      <PremiumPlusCarousel jobs={premiumPlusJobs} />
 
       <FilterBar
         regimes={regimes}

@@ -60,8 +60,8 @@ export default function SimilarJobs({ jobs }) {
 
   return (
     <div className='mb-10'>
-      <h2 className='font-display font-semibold text-lg text-text-primary mb-4 pb-3 border-b border-border-subtle tracking-tight'>
-        მსგავსი ვაკანსიები
+      <h2 className='font-display font-bold text-xl text-text-primary mb-5 pb-3 border-b border-border-subtle tracking-tight'>
+        სხვა ვაკანსიები
       </h2>
       {/* Horizontal scroll on mobile, 3-col grid on desktop */}
       <div className='flex gap-3 overflow-x-auto pb-2 sm:pb-0 sm:grid sm:grid-cols-3 sm:overflow-visible'

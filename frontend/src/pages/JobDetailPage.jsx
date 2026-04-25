@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../store/AuthContext';
+import { useSavedJobs } from '../store/SavedJobsContext';
 import { PageShell, Container, Tag, LoadingScreen } from '../components/ui';
 import { REGIME_LABELS, EXP_LABELS, CATEGORY_LABELS } from '../utils/constants';
 import JobHeroCard   from '../components/jobdetail/JobHeroCard';
@@ -15,11 +16,11 @@ export default function JobDetailPage() {
   const { id }   = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { isSaved, toggle } = useSavedJobs();
 
   // ── Data ────────────────────────────────────────────────────────────────────
   const [job,     setJob]     = useState(null);
   const [savedCv, setSavedCv] = useState(null);
-  const [isSaved, setIsSaved] = useState(false);
   const [applied, setApplied] = useState(false);
 
   // ── UI state ────────────────────────────────────────────────────────────────
@@ -32,29 +33,19 @@ export default function JobDetailPage() {
       api.get('/profiles/me').then(({ data }) => {
         if (data.cvUrl) setSavedCv(data.cvUrl);
       }).catch(() => {});
-      api.get('/saved-jobs/ids').then(({ data }) => {
-        setIsSaved(data.includes(+id));
-      }).catch(() => {});
     }
   }, [id, user?.role]);
 
   // ── Save / unsave ────────────────────────────────────────────────────────────
   const toggleSave = useCallback(async () => {
     if (!user) return navigate('/login?returnTo=/jobs/' + id);
-    const prev = isSaved;
-    setIsSaved(!prev);
-    try {
-      if (prev) await api.delete('/saved-jobs/' + id);
-      else       await api.post('/saved-jobs/' + id);
-    } catch {
-      setIsSaved(prev);
-    }
-  }, [user, isSaved, id, navigate]);
+    toggle(+id);
+  }, [user, id, navigate, toggle]);
 
   // ── Apply CTA handler ────────────────────────────────────────────────────────
   const handleApplyCta = useCallback(() => {
     if (!user) return navigate('/login?returnTo=/jobs/' + id);
-    if (user.role !== 'CANDIDATE') return; // employer — button is already hidden
+    if (user.role !== 'CANDIDATE') return;
     setModalOpen(true);
   }, [user, id, navigate]);
 
@@ -94,12 +85,12 @@ export default function JobDetailPage() {
           {/* Hero */}
           <JobHeroCard job={job} />
 
-          {/* Sticky apply bar — hidden for employers */}
+          {/* Sticky apply bar */}
           <StickyApplyBar
             job={job}
             user={user}
             applied={applied}
-            isSaved={isSaved}
+            isSaved={isSaved(+id)}
             onApply={handleApplyCta}
             onSave={toggleSave}
             onShare={handleShare}

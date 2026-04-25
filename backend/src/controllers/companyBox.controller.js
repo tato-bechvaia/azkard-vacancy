@@ -103,6 +103,41 @@ const listAllBoxes = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// ── GET /api/company-boxes/public — companies with active CV Boxes ───────
+const listPublicCompanies = async (req, res, next) => {
+  try {
+    const cached = cache.get('company_boxes:public_companies');
+    if (cached) return res.json(cached);
+
+    const { data: boxes, error } = await supabase
+      .from('company_boxes')
+      .select(`
+        id, is_active,
+        employer_profiles!company_id(
+          id, company_name, avatar_url, logo_url, description, website,
+          jobs(count)
+        )
+      `)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+
+    const result = (boxes || []).map(b => ({
+      id: b.employer_profiles?.id,
+      companyName: b.employer_profiles?.company_name,
+      avatarUrl: b.employer_profiles?.avatar_url,
+      logoUrl: b.employer_profiles?.logo_url,
+      description: b.employer_profiles?.description,
+      website: b.employer_profiles?.website,
+      jobCount: b.employer_profiles?.jobs?.[0]?.count ?? 0,
+      boxActive: b.is_active,
+      boxId: b.id,
+    }));
+    cache.set('company_boxes:public_companies', result, 120);
+    res.json(result);
+  } catch (err) { next(err); }
+};
+
 // ── GET /api/company-boxes/:companyId ─────────────────────────────────────
 const listBoxes = async (req, res, next) => {
   try {
@@ -318,4 +353,4 @@ const viewSubmissionCV = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { createBox, listAllBoxes, listBoxes, submitCV, listSubmissions, updateBox, cvUpload, viewSubmissionCV };
+module.exports = { createBox, listAllBoxes, listBoxes, listPublicCompanies, submitCV, listSubmissions, updateBox, cvUpload, viewSubmissionCV };

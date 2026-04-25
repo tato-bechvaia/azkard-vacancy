@@ -18,7 +18,7 @@ export default function JobHeroCard({ job }) {
   );
 
   return (
-    <div className='bg-surface-50 border border-border rounded-2xl p-6 sm:p-8 mb-3'>
+    <div className='bg-surface-50 border border-border-strong rounded-2xl p-6 sm:p-8 mb-3'>
       <div className='flex items-start gap-4 sm:gap-5'>
         <CompanyAvatar company={employer} size='lg' />
 
