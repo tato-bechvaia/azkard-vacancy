@@ -15,7 +15,7 @@ const COUNTRY_CODES = [
   { code: '+994', flag: '🇦🇿' },
 ];
 
-const INPUT = 'w-full h-11 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100 focus:bg-white transition-colors duration-150';
+const INPUT = 'w-full h-11 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm text-gray-900 focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100 focus:bg-white transition-colors duration-150';
 
 const PANELS = [
   { role: 'CANDIDATE', label: 'მაძიებელი',    desc: 'ვეძებ სამუშაოს' },
@@ -181,14 +181,14 @@ export default function RegisterPage() {
               <div className='flex gap-2'>
                 <select value={form.countryCode}
                   onChange={e => setForm(p => ({ ...p, countryCode: e.target.value }))}
-                  className='h-11 bg-gray-50 border border-gray-200 rounded-xl px-2 text-sm focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100 flex-shrink-0'>
+                  className='h-11 bg-gray-50 border border-gray-200 rounded-xl px-2 text-sm text-gray-900 focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100 flex-shrink-0'>
                   {COUNTRY_CODES.map(c => (
                     <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
                   ))}
                 </select>
                 <input type='tel' value={form.phoneNumber}
                   onChange={e => setForm(p => ({ ...p, phoneNumber: e.target.value }))}
-                  className='flex-1 h-11 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100 focus:bg-white transition-colors duration-150'
+                  className='flex-1 h-11 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm text-gray-900 focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100 focus:bg-white transition-colors duration-150'
                   placeholder='555 00 00 00' />
               </div>
             </div>

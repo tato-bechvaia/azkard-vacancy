@@ -4,9 +4,9 @@ import NotificationPanel from './NotificationPanel';
 
 const NAV_LINKS = [
   { path: '/',          label: 'მთავარი' },
-  { path: '/pricing',   label: 'ფასები' },
   { path: '/vacancies', label: 'ვაკანსიები' },
   { path: '/cv-boxes',  label: 'CV Boxes' },
+  { path: '/pricing',   label: 'ფასები' },
 ];
 
 export default function Navbar() {

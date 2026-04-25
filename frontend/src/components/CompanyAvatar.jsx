@@ -9,6 +9,7 @@ export default function CompanyAvatar({ company, size = 'md' }) {
   }, [company?.avatarUrl]);
 
   const sizes = {
+    xs:  'w-6 h-6 text-[10px] rounded-md',
     sm:  'w-7 h-7 text-xs rounded-lg',
     md:  'w-10 h-10 text-sm rounded-xl',
     lg:  'w-16 h-16 text-2xl rounded-xl',

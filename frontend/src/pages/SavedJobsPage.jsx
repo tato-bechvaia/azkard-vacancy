@@ -38,8 +38,8 @@ export default function SavedJobsPage() {
 
       <div className='max-w-3xl mx-auto pt-[5.25rem] px-5 pb-16'>
         <div className='pt-8 mb-6'>
-          <p className='text-[10.5px] tracking-[0.2em] uppercase text-gray-400 mb-1'>შენახული</p>
-          <h1 className='font-display font-semibold text-[24px] text-gray-900 leading-tight'>
+          <p className='text-[10.5px] tracking-[0.2em] uppercase text-text-muted mb-1'>შენახული</p>
+          <h1 className='font-display font-semibold text-[24px] text-text-primary leading-tight'>
             შენახული ვაკანსიები
           </h1>
         </div>

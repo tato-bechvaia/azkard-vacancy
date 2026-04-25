@@ -7,7 +7,7 @@ import PremiumPlusCarousel from '../components/home/PremiumPlusCarousel';
 import PremiumStrip  from '../components/home/PremiumStrip';
 import FilterBar     from '../components/home/FilterBar';
 import MainJobList   from '../components/home/MainJobList';
-import SecondaryRows from '../components/home/SecondaryRows';
+import PartnerStrip  from '../components/home/PartnerStrip';
 
 const LIMIT = 10;
 
@@ -70,12 +70,10 @@ export default function JobsPage() {
     [...regimes, category, experience, location, sort !== 'newest' ? sort : '', salaryMin, salaryMax].filter(Boolean).length,
     [regimes, category, experience, location, sort, salaryMin, salaryMax]
   );
-  const filtersActive = activeCount > 0 || !!search;
 
   // ── Server data ───────────────────────────────────────────────────────────
   const [premiumPlusJobs, setPremiumPlusJobs] = useState([]);
   const [premiumJobs,     setPremiumJobs]     = useState([]);
-  const [carInternships,  setCarInternships]  = useState([]);
 
   // ── Main listing (standard jobs) ──────────────────────────────────────────
   const [jobs,    setJobs]    = useState([]);
@@ -86,7 +84,6 @@ export default function JobsPage() {
 
   const observerRef  = useRef(null);
   const abortRef     = useRef(null);
-  const carouselDone = useRef(false);
   const loadingRef   = useRef(false);
 
   const filterKey = [
@@ -99,7 +96,6 @@ export default function JobsPage() {
     setPremiumJobs([]);
     setPage(1);
     setHasMore(true);
-    carouselDone.current = false;
   }, [filterKey]);
 
   useEffect(() => {
@@ -124,10 +120,6 @@ export default function JobsPage() {
         if (page === 1) {
           setPremiumPlusJobs(data.premiumPlusJobs || []);
           setPremiumJobs(data.premiumJobs || []);
-          if (!carouselDone.current && data.carousels) {
-            setCarInternships(data.carousels.internships || []);
-            carouselDone.current = true;
-          }
         }
         // Main list = Premium + Standard (Premium+ is only in top carousel)
         const premJobs = page === 1 ? (data.premiumJobs || []) : [];
@@ -159,6 +151,9 @@ export default function JobsPage() {
         total={total}
       />
 
+      {/* Partner companies strip */}
+      <PartnerStrip />
+
       {/* Premium+ carousel — only Premium+ jobs */}
       <PremiumPlusCarousel jobs={premiumPlusJobs} />
 
@@ -188,10 +183,6 @@ export default function JobsPage() {
         sentinelRef={sentinelRef}
       />
 
-      <SecondaryRows
-        filtersActive={filtersActive}
-        internships={carInternships}
-      />
     </PageShell>
   );
 }

@@ -101,7 +101,7 @@ export default function LoginPage() {
                 type='email' required
                 value={form.email}
                 onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
-                className='w-full h-11 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100 focus:bg-white transition-colors duration-150'
+                className='w-full h-11 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm text-gray-900 focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100 focus:bg-white transition-colors duration-150'
                 placeholder='you@example.com'
               />
             </div>
@@ -111,7 +111,7 @@ export default function LoginPage() {
                 type='password' required
                 value={form.password}
                 onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-                className='w-full h-11 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100 focus:bg-white transition-colors duration-150'
+                className='w-full h-11 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm text-gray-900 focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100 focus:bg-white transition-colors duration-150'
                 placeholder='••••••••'
               />
             </div>
