@@ -4,7 +4,7 @@ const { uploadToStorage } = require('../utils/storage');
 
 const applyToJob = async (req, res, next) => {
   try {
-    const { coverLetter } = req.body;
+    const { coverLetter } = req.body || {};
 
     const { data: candidate } = await supabase
       .from('candidate_profiles')

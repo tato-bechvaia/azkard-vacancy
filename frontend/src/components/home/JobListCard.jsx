@@ -27,7 +27,7 @@ function BookmarkButton({ jobId }) {
 
   return (
     <button
-      onClick={(e) => { e.stopPropagation(); toggle(jobId); }}
+      onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(jobId); }}
       title={saved ? 'წაშლა შენახულებიდან' : 'შენახვა'}
       className={[
         'flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-150',
@@ -106,6 +106,7 @@ export default function JobListCard({ job }) {
           <div className='flex items-center gap-1.5 text-sm text-text-muted mb-3 flex-wrap'>
             <span
               onClick={e => {
+                e.preventDefault();
                 e.stopPropagation();
                 navigate('/companies/' + job.employer.companyName.toLowerCase().replace(/ /g, '-'));
               }}
