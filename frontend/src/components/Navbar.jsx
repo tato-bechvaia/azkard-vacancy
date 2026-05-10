@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../store/AuthContext';
 import NotificationPanel from './NotificationPanel';
 
@@ -11,7 +11,6 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
 
   const showBanner = import.meta.env.VITE_SHOW_TEST_BANNER === 'true';
@@ -32,42 +31,42 @@ export default function Navbar() {
 
         {/* Left: Logo + Nav links */}
         <div className='flex items-center gap-6'>
-          <div
-            onClick={() => navigate('/')}
-            className='cursor-pointer inline-block'>
+          <Link
+            to='/'
+            className='cursor-pointer inline-block no-underline'>
             <div className='h-8 px-3.5 rounded-lg bg-brand-600 inline-flex items-center text-white font-display font-bold text-[15px] tracking-wide'>
               Azkard
             </div>
-          </div>
+          </Link>
 
           {/* Navigation links — hidden on mobile */}
           <div className='hidden md:flex items-center gap-1'>
             {NAV_LINKS.map(link => (
-              <button
+              <Link
                 key={link.path}
-                onClick={() => navigate(link.path)}
+                to={link.path}
                 className={[
-                  'h-8 px-3 rounded-lg text-[13.5px] font-semibold transition-colors duration-150',
+                  'h-8 px-3 rounded-lg text-[13.5px] font-semibold flex items-center no-underline transition-colors duration-150',
                   isActive(link.path)
                     ? 'bg-brand-50 text-brand-600'
                     : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50',
                 ].join(' ')}
               >
                 {link.label}
-              </button>
+              </Link>
             ))}
             {user?.role === 'CANDIDATE' && (
-              <button
-                onClick={() => navigate('/saved')}
+              <Link
+                to='/saved'
                 className={[
-                  'h-8 px-3 rounded-lg text-[13.5px] font-semibold transition-colors duration-150',
+                  'h-8 px-3 rounded-lg text-[13.5px] font-semibold flex items-center no-underline transition-colors duration-150',
                   isActive('/saved')
                     ? 'bg-brand-50 text-brand-600'
                     : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50',
                 ].join(' ')}
               >
                 შენახული
-              </button>
+              </Link>
             )}
           </div>
         </div>
@@ -79,18 +78,18 @@ export default function Navbar() {
               <NotificationPanel />
               {/* Mobile saved icon */}
               {user.role === 'CANDIDATE' && (
-                <button
-                  onClick={() => navigate('/saved')}
+                <Link
+                  to='/saved'
                   title='შენახული ვაკანსიები'
                   className='md:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-50 transition-colors duration-150 text-gray-400 hover:text-brand-600'>
                   <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.75' strokeLinecap='round' strokeLinejoin='round'>
                     <path d='M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z'/>
                   </svg>
-                </button>
+                </Link>
               )}
-              <button
-                onClick={() => navigate('/profile')}
-                className='flex items-center gap-2 h-8 px-3 rounded-lg hover:bg-gray-50 transition-colors duration-150 group'>
+              <Link
+                to='/profile'
+                className='flex items-center gap-2 h-8 px-3 rounded-lg hover:bg-gray-50 no-underline transition-colors duration-150 group'>
                 <div className='w-5 h-5 rounded-full bg-brand-600 flex items-center justify-center flex-shrink-0'>
                   <svg width='10' height='10' viewBox='0 0 16 16' fill='none' stroke='white' strokeWidth='1.75'>
                     <circle cx='8' cy='5' r='3'/>
@@ -100,7 +99,7 @@ export default function Navbar() {
                 <span className='text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors duration-150 font-medium hidden sm:inline'>
                   {localStorage.getItem('displayName') || 'პროფილი'}
                 </span>
-              </button>
+              </Link>
               <button
                 onClick={logout}
                 className='h-8 px-3 rounded-lg text-[13px] font-medium text-gray-500 hover:text-red-600 hover:bg-red-50/60 transition-colors duration-150'>
@@ -109,16 +108,16 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <button
-                onClick={() => navigate('/login')}
-                className='h-8 px-4 rounded-lg text-[13px] font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors duration-150'>
+              <Link
+                to='/login'
+                className='h-8 px-4 rounded-lg text-[13px] font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 no-underline flex items-center transition-colors duration-150'>
                 შესვლა
-              </button>
-              <button
-                onClick={() => navigate('/register')}
-                className='h-8 px-4 rounded-lg text-[13px] font-medium bg-brand-600 hover:bg-brand-700 text-white transition-colors duration-150'>
+              </Link>
+              <Link
+                to='/register'
+                className='h-8 px-4 rounded-lg text-[13px] font-medium bg-brand-600 hover:bg-brand-700 text-white no-underline flex items-center transition-colors duration-150'>
                 რეგისტრაცია
-              </button>
+              </Link>
             </>
           )}
         </div>
@@ -128,11 +127,11 @@ export default function Navbar() {
       <div className='md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-t border-gray-100 flex items-center justify-around h-14 px-2'
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         {NAV_LINKS.map(link => (
-          <button
+          <Link
             key={link.path}
-            onClick={() => navigate(link.path)}
+            to={link.path}
             className={[
-              'flex flex-col items-center gap-0.5 py-1.5 px-2 rounded-lg transition-colors duration-150 min-w-[52px]',
+              'flex flex-col items-center gap-0.5 py-1.5 px-2 rounded-lg no-underline transition-colors duration-150 min-w-[52px]',
               isActive(link.path)
                 ? 'text-brand-600'
                 : 'text-gray-400',
@@ -159,13 +158,13 @@ export default function Navbar() {
               </svg>
             )}
             <span className='text-[10px] font-medium'>{link.label}</span>
-          </button>
+          </Link>
         ))}
         {user?.role === 'CANDIDATE' && (
-          <button
-            onClick={() => navigate('/saved')}
+          <Link
+            to='/saved'
             className={[
-              'flex flex-col items-center gap-0.5 py-1.5 px-2 rounded-lg transition-colors duration-150 min-w-[52px]',
+              'flex flex-col items-center gap-0.5 py-1.5 px-2 rounded-lg no-underline transition-colors duration-150 min-w-[52px]',
               isActive('/saved') ? 'text-brand-600' : 'text-gray-400',
             ].join(' ')}
           >
@@ -173,7 +172,7 @@ export default function Navbar() {
               <path d='M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z'/>
             </svg>
             <span className='text-[10px] font-medium'>შენახული</span>
-          </button>
+          </Link>
         )}
       </div>
     </>
