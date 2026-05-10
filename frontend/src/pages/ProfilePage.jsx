@@ -5,21 +5,14 @@ import { assetUrl } from '../utils/assetUrl';
 import { useAuth } from '../store/AuthContext';
 import Navbar from '../components/Navbar';
 import CompanyAvatar from '../components/CompanyAvatar';
+import { Card, Badge, Tag, Button } from '../components/ui';
 
 const STATUS_STYLES = {
-  PENDING:     'bg-amber-50 text-amber-700 border-amber-200',
-  REVIEWING:   'bg-blue-50 text-blue-700 border-blue-200',
-  SHORTLISTED: 'bg-brand-50 text-brand-600 border-brand-200',
-  REJECTED:    'bg-red-50 text-red-500 border-red-200',
-  HIRED:       'bg-teal-50 text-teal-700 border-teal-200',
-};
-
-const STATUS_DOT = {
-  PENDING:     'bg-amber-400',
-  REVIEWING:   'bg-blue-400',
-  SHORTLISTED: 'bg-brand-500',
-  REJECTED:    'bg-red-400',
-  HIRED:       'bg-teal-400',
+  PENDING:     'warning',
+  REVIEWING:   'info',
+  SHORTLISTED: 'brand',
+  REJECTED:    'danger',
+  HIRED:       'success',
 };
 
 const STATUS_GEO = {
@@ -32,9 +25,9 @@ const STATUS_GEO = {
 
 const CAT_LABEL_GEO = { IT:'IT', SALES:'გაყიდვები', MARKETING:'მარკეტინგი', FINANCE:'ფინანსები', DESIGN:'დიზაინი', MANAGEMENT:'მენეჯმენტი', LOGISTICS:'ლოჯისტიკა', HEALTHCARE:'მედიცინა', EDUCATION:'განათლება', HOSPITALITY:'სტუმართმოყვარეობა', OTHER:'სხვა' };
 
-const INPUT = 'w-full h-10 bg-white border border-gray-200 rounded-lg px-3 text-[13px] text-gray-900 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100/50 transition-all duration-150 placeholder-gray-400';
-const TEXTAREA = 'w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-[13px] text-gray-900 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100/50 transition-all duration-150 resize-none placeholder-gray-400';
-const SELECT_CLS = 'h-10 bg-white border border-gray-200 rounded-lg px-3 text-[13px] text-gray-800 focus:outline-none focus:border-brand-500 transition-colors duration-150';
+const INPUT = 'w-full h-10 bg-surface-100 border border-border-subtle rounded-lg px-3 text-[13px] text-text-primary focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30 transition-all duration-150 placeholder-text-muted';
+const TEXTAREA = 'w-full bg-surface-100 border border-border-subtle rounded-lg px-3 py-2.5 text-[13px] text-text-primary focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30 transition-all duration-150 resize-none placeholder-text-muted';
+const SELECT_CLS = 'h-10 bg-surface-100 border border-border-subtle rounded-lg px-3 text-[13px] text-text-primary focus:outline-none focus:border-brand-500 transition-colors duration-150';
 
 
 export default function ProfilePage() {
@@ -65,8 +58,6 @@ export default function ProfilePage() {
   const [selectedBox, setSelectedBox]       = useState(null);
   const [boxSubmissions, setBoxSubmissions] = useState([]);
   const [subCatFilter, setSubCatFilter]     = useState('ALL');
-  const [showBoxForm, setShowBoxForm]       = useState(false);
-  const [boxForm, setBoxForm]               = useState({ title: '', description: '' });
 
   useEffect(() => {
     if (!user) { navigate('/login'); return; }
@@ -100,7 +91,7 @@ export default function ProfilePage() {
     } else {
       api.get('/applications/mine').then(({ data }) => setApplications(data)).catch(() => {});
     }
-  }, []);
+  }, [user, navigate, searchParams]);
 
   const viewApplicants = async (job) => {
     setSelectedJob(job);
@@ -239,17 +230,17 @@ export default function ProfilePage() {
       ];
 
   return (
-    <div className='min-h-screen bg-surface-50'>
+    <div className='min-h-screen bg-surface text-text-primary'>
       <Navbar />
 
-      <div className='max-w-5xl mx-auto pt-[5.25rem] px-5 pb-12 flex gap-5'>
+      <div className='max-w-5xl mx-auto pt-[5.25rem] px-5 pb-12 flex flex-col md:flex-row gap-8'>
 
         {/* ── Sidebar ─────────────────────────────────────── */}
-        <aside className='w-[200px] flex-shrink-0 pt-5'>
-          <div className='bg-white border border-gray-100 rounded-2xl overflow-hidden'>
+        <aside className='w-full md:w-[220px] flex-shrink-0 pt-5'>
+          <Card padding='none' className='overflow-hidden sticky top-[6.5rem]'>
 
             {/* Profile card */}
-            <div className='px-5 pt-6 pb-5 border-b border-gray-100'>
+            <div className='px-5 pt-6 pb-5 border-b border-border-subtle'>
               {user?.role === 'EMPLOYER' ? (
                 <>
                   <div className='relative w-fit mb-4'>
@@ -258,16 +249,16 @@ export default function ProfilePage() {
                         src={assetUrl(profile.avatarUrl)}
                         alt='avatar'
                         onError={() => setAvatarLoadError(true)}
-                        className='w-12 h-12 rounded-full object-cover border border-gray-100'
+                        className='w-12 h-12 rounded-xl object-cover border border-border-subtle shadow-sm'
                       />
                     ) : (
-                      <div className='w-12 h-12 rounded-full bg-brand-50 border border-brand-100 flex items-center justify-center font-display font-semibold text-brand-600 text-[15px]'>
+                      <div className='w-12 h-12 rounded-xl bg-brand-600/10 border border-brand-400/20 flex items-center justify-center font-display font-semibold text-brand-400 text-[15px] shadow-sm'>
                         {initials}
                       </div>
                     )}
-                    <label className='absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-brand-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-brand-700 transition-colors duration-150 shadow-sm'>
+                    <label className='absolute -bottom-1.5 -right-1.5 w-6 h-6 bg-brand-600 rounded-lg flex items-center justify-center cursor-pointer hover:bg-brand-500 transition-all duration-150 shadow-lg border border-surface'>
                       <input type='file' accept='.jpg,.jpeg,.png,.webp' className='hidden' onChange={handleAvatarUpload} />
-                      <svg width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='2.5'>
+                      <svg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='3'>
                         <path d='M12 5v14M5 12h14'/>
                       </svg>
                     </label>
@@ -275,20 +266,20 @@ export default function ProfilePage() {
                       <button
                         onClick={handleAvatarDelete}
                         title='ფოტოს წაშლა'
-                        className='absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors duration-150 shadow-sm'>
-                        <svg width='7' height='7' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='3'>
+                        className='absolute -top-1.5 -right-1.5 w-6 h-6 bg-danger-500 rounded-lg flex items-center justify-center hover:bg-danger-600 transition-all duration-150 shadow-lg border border-surface'>
+                        <svg width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='3'>
                           <path d='M18 6 6 18M6 6l12 12'/>
                         </svg>
                       </button>
                     )}
                   </div>
-                  <p className='font-semibold text-[13.5px] text-gray-900 leading-tight'>{displayName || '—'}</p>
-                  <p className='text-[11.5px] text-gray-400 mt-0.5'>დამსაქმებელი</p>
+                  <p className='font-semibold text-md text-text-primary leading-tight'>{displayName || '—'}</p>
+                  <p className='text-xs text-text-muted mt-1'>დამსაქმებელი</p>
                 </>
               ) : (
                 <>
-                  <p className='font-semibold text-[13.5px] text-gray-900 leading-tight mb-0.5'>{displayName || '—'}</p>
-                  <p className='text-[11.5px] text-gray-400'>კანდიდატი</p>
+                  <p className='font-semibold text-md text-text-primary leading-tight mb-1'>{displayName || '—'}</p>
+                  <p className='text-xs text-text-muted'>კანდიდატი</p>
                 </>
               )}
             </div>
@@ -299,32 +290,32 @@ export default function ProfilePage() {
                 <button
                   key={item.key}
                   onClick={() => setActivePanel(item.key)}
-                  className={'flex items-center justify-between w-full text-left px-3 py-2 rounded-xl text-[12.5px] transition-colors duration-150 ' +
+                  className={'flex items-center justify-between w-full text-left px-3 py-2.5 rounded-xl text-[13px] transition-all duration-150 group ' +
                     (activePanel === item.key
-                      ? 'bg-brand-50 text-brand-600 font-semibold'
-                      : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50')}>
+                      ? 'bg-brand-600/10 text-brand-400 font-semibold shadow-sm'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-surface-100')}>
                   {item.label}
                   {item.count !== null && item.count > 0 && (
-                    <span className='text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full font-medium'>
+                    <span className='text-[10px] bg-surface-200 text-text-muted px-2 py-0.5 rounded-full font-bold group-hover:bg-surface-300 transition-colors'>
                       {item.count}
                     </span>
                   )}
                 </button>
               ))}
 
-              <div className='mx-3 my-2 h-px bg-gray-100' />
+              <div className='mx-3 my-2.5 h-px bg-border-subtle' />
 
               <button
                 onClick={logout}
-                className='flex items-center gap-2 w-full text-left px-3 py-2 rounded-xl text-[12.5px] text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors duration-150'>
-                <svg width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.75'>
+                className='flex items-center gap-2 w-full text-left px-3 py-2.5 rounded-xl text-[13px] text-text-muted hover:text-danger hover:bg-danger/10 transition-all duration-150'>
+                <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
                   <path d='M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4'/><polyline points='16 17 21 12 16 7'/><line x1='21' y1='12' x2='9' y2='12'/>
                 </svg>
                 გასვლა
               </button>
             </div>
 
-          </div>
+          </Card>
         </aside>
 
         {/* ── Main ────────────────────────────────────────── */}
@@ -332,334 +323,356 @@ export default function ProfilePage() {
 
           {/* Toast message */}
           {message && (
-            <div className='flex items-center gap-2.5 bg-white border border-gray-100 rounded-xl px-4 py-3 mb-4 shadow-card animate-slide-up'>
-              <div className='w-1.5 h-1.5 rounded-full bg-teal-400 flex-shrink-0' />
-              <p className='text-[13px] text-gray-700'>{message}</p>
-              <button onClick={() => setMessage('')} className='ml-auto text-gray-300 hover:text-gray-500 transition-colors duration-150'>
-                <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+            <Card padding='sm' className='flex items-center gap-3 mb-6 animate-slide-up border-teal-500/20 bg-teal-500/5'>
+              <div className='w-1.5 h-1.5 rounded-full bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.5)] flex-shrink-0' />
+              <p className='text-sm text-teal-400/90'>{message}</p>
+              <button onClick={() => setMessage('')} className='ml-auto text-text-muted hover:text-text-secondary transition-colors duration-150'>
+                <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
                   <path d='M18 6 6 18M6 6l12 12'/>
                 </svg>
               </button>
-            </div>
+            </Card>
           )}
 
           {/* ════ EMPLOYER: My Jobs ═══════════════════════════ */}
           {activePanel === 'jobs' && user?.role === 'EMPLOYER' && (
             <div>
               {/* Stats row */}
-              <div className='grid grid-cols-3 gap-3 mb-6'>
+              <div className='grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8'>
                 {[
                   { label: 'აქტიური ვაკანსია', value: jobs.filter(j => j.status === 'HIRING').length },
                   { label: 'ნახვები სულ',       value: jobs.reduce((a, j) => a + j.views, 0).toLocaleString() },
                   { label: 'განაცხადები სულ',   value: jobs.reduce((a, j) => a + (j._count?.applications || 0), 0) },
                 ].map(stat => (
-                  <div key={stat.label} className='bg-white border border-gray-100 rounded-xl p-5'>
-                    <p className='text-[10.5px] text-gray-400 uppercase tracking-wider mb-2'>{stat.label}</p>
-                    <p className='font-display font-semibold text-[26px] text-gray-900 leading-none'>{stat.value}</p>
-                  </div>
+                  <Card key={stat.label} padding='md' className='flex flex-col justify-between min-h-[100px]'>
+                    <p className='text-[10px] text-text-muted uppercase tracking-widest font-bold mb-3'>{stat.label}</p>
+                    <p className='font-display font-bold text-[28px] text-text-primary leading-none tracking-tight'>{stat.value}</p>
+                  </Card>
                 ))}
               </div>
 
-              <div className='flex items-center justify-between mb-4'>
-                <p className='font-semibold text-[14px] text-gray-900'>გამოქვეყნებული ვაკანსიები</p>
-                <button
+              <div className='flex items-center justify-between mb-5'>
+                <p className='font-bold text-md text-text-primary tracking-tight'>გამოქვეყნებული ვაკანსიები</p>
+                <Button
+                  size='sm'
+                  variant={showJobForm ? 'secondary' : 'primary'}
                   onClick={() => setShowJobForm(!showJobForm)}
-                  className={'text-[12.5px] font-medium px-3.5 py-1.5 rounded-lg transition-colors duration-150 ' +
-                    (showJobForm
-                      ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      : 'bg-brand-600 hover:bg-brand-700 text-white')}>
+                >
                   {showJobForm ? 'გაუქმება' : '+ ახალი ვაკანსია'}
-                </button>
+                </Button>
               </div>
 
               {showJobForm && (
-                <form onSubmit={handlePostJob} className='bg-white border border-gray-100 rounded-2xl p-6 mb-4 space-y-3.5'>
-                  <div>
-                    <label className='text-[11.5px] text-gray-500 block mb-1.5 font-medium'>დასახელება *</label>
-                    <input required placeholder='მაგ: Frontend Developer' value={jobForm.title}
-                      onChange={e => setJobForm(p => ({ ...p, title: e.target.value }))}
-                      className={INPUT} />
-                  </div>
-                  <div>
-                    <label className='text-[11.5px] text-gray-500 block mb-1.5 font-medium'>აღწერა *</label>
-                    <textarea required placeholder='სამუშაოს სრული აღწერა...' value={jobForm.description} rows={4}
-                      onChange={e => setJobForm(p => ({ ...p, description: e.target.value }))}
-                      className={TEXTAREA} />
-                  </div>
-                  <div className='grid grid-cols-2 gap-3'>
+                <Card className='mb-8 animate-in fade-in slide-in-from-top-4 duration-300'>
+                  <form onSubmit={handlePostJob} className='space-y-5'>
                     <div>
-                      <label className='text-[11.5px] text-gray-500 block mb-1.5 font-medium'>ლოკაცია</label>
-                      <input placeholder='თბილისი' value={jobForm.location}
-                        onChange={e => setJobForm(p => ({ ...p, location: e.target.value }))}
+                      <label className='text-xs text-text-secondary block mb-2 font-medium ml-1'>დასახელება *</label>
+                      <input required placeholder='მაგ: Frontend Developer' value={jobForm.title}
+                        onChange={e => setJobForm(p => ({ ...p, title: e.target.value }))}
                         className={INPUT} />
                     </div>
                     <div>
-                      <label className='text-[11.5px] text-gray-500 block mb-1.5 font-medium'>ხელფასი (₾) *</label>
-                      <input required type='number' placeholder='2000' value={jobForm.salaryMin}
-                        onChange={e => setJobForm(p => ({ ...p, salaryMin: e.target.value }))}
-                        className={INPUT} />
+                      <label className='text-xs text-text-secondary block mb-2 font-medium ml-1'>აღწერა *</label>
+                      <textarea required placeholder='სამუშაოს სრული აღწერა...' value={jobForm.description} rows={6}
+                        onChange={e => setJobForm(p => ({ ...p, description: e.target.value }))}
+                        className={TEXTAREA} />
                     </div>
-                    <div>
-                      <label className='text-[11.5px] text-gray-500 block mb-1.5 font-medium'>სამუშაო ფორმატი</label>
-                      <select value={jobForm.jobRegime} onChange={e => setJobForm(p => ({ ...p, jobRegime: e.target.value }))}
-                        className={SELECT_CLS + ' w-full'}>
-                        <option value='FULL_TIME'>ადგილზე</option>
-                        <option value='REMOTE'>დისტანციური</option>
-                        <option value='HYBRID'>ჰიბრიდული</option>
-                      </select>
+                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                      <div>
+                        <label className='text-xs text-text-secondary block mb-2 font-medium ml-1'>ლოკაცია</label>
+                        <input placeholder='თბილისი' value={jobForm.location}
+                          onChange={e => setJobForm(p => ({ ...p, location: e.target.value }))}
+                          className={INPUT} />
+                      </div>
+                      <div>
+                        <label className='text-xs text-text-secondary block mb-2 font-medium ml-1'>ხელფასი (₾) *</label>
+                        <input required type='number' placeholder='2000' value={jobForm.salaryMin}
+                          onChange={e => setJobForm(p => ({ ...p, salaryMin: e.target.value }))}
+                          className={INPUT} />
+                      </div>
+                      <div>
+                        <label className='text-xs text-text-secondary block mb-2 font-medium ml-1'>სამუშაო ფორმატი</label>
+                        <select value={jobForm.jobRegime} onChange={e => setJobForm(p => ({ ...p, jobRegime: e.target.value }))}
+                          className={SELECT_CLS + ' w-full'}>
+                          <option value='FULL_TIME'>ადგილზე</option>
+                          <option value='REMOTE'>დისტანციური</option>
+                          <option value='HYBRID'>ჰიბრიდული</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className='text-xs text-text-secondary block mb-2 font-medium ml-1'>გამოცდილება</label>
+                        <select value={jobForm.experience} onChange={e => setJobForm(p => ({ ...p, experience: e.target.value }))}
+                          className={SELECT_CLS + ' w-full'}>
+                          <option value='NONE'>არ სჭირდება</option>
+                          <option value='ONE_TO_THREE'>1–3 წელი</option>
+                          <option value='THREE_TO_FIVE'>3–5 წელი</option>
+                          <option value='FIVE_PLUS'>5+ წელი</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className='text-xs text-text-secondary block mb-2 font-medium ml-1'>კატეგორია</label>
+                        <select value={jobForm.category} onChange={e => setJobForm(p => ({ ...p, category: e.target.value }))}
+                          className={SELECT_CLS + ' w-full'}>
+                          <option value='IT'>IT და ტექნოლოგია</option>
+                          <option value='SALES'>გაყიდვები</option>
+                          <option value='MARKETING'>მარკეტინგი</option>
+                          <option value='FINANCE'>ფინანსები</option>
+                          <option value='DESIGN'>დიზაინი</option>
+                          <option value='MANAGEMENT'>მენეჯმენტი</option>
+                          <option value='LOGISTICS'>ლოჯისტიკა</option>
+                          <option value='HEALTHCARE'>მედიცინა</option>
+                          <option value='EDUCATION'>განათლება</option>
+                          <option value='HOSPITALITY'>სტუმართმოყვარეობა</option>
+                          <option value='OTHER'>სხვა</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className='text-xs text-text-secondary block mb-2 font-medium ml-1'>განაცხადის მეთოდი</label>
+                        <select value={jobForm.applicationMethod} onChange={e => setJobForm(p => ({ ...p, applicationMethod: e.target.value }))}
+                          className={SELECT_CLS + ' w-full'}>
+                          <option value='CV_ONLY'>მხოლოდ CV</option>
+                          <option value='FORM_ONLY'>მხოლოდ ფორმა</option>
+                          <option value='BOTH'>CV და ფორმა</option>
+                        </select>
+                      </div>
                     </div>
-                    <div>
-                      <label className='text-[11.5px] text-gray-500 block mb-1.5 font-medium'>გამოცდილება</label>
-                      <select value={jobForm.experience} onChange={e => setJobForm(p => ({ ...p, experience: e.target.value }))}
-                        className={SELECT_CLS + ' w-full'}>
-                        <option value='NONE'>არ სჭირდება</option>
-                        <option value='ONE_TO_THREE'>1–3 წელი</option>
-                        <option value='THREE_TO_FIVE'>3–5 წელი</option>
-                        <option value='FIVE_PLUS'>5+ წელი</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className='text-[11.5px] text-gray-500 block mb-1.5 font-medium'>კატეგორია</label>
-                      <select value={jobForm.category} onChange={e => setJobForm(p => ({ ...p, category: e.target.value }))}
-                        className={SELECT_CLS + ' w-full'}>
-                        <option value='IT'>IT და ტექნოლოგია</option>
-                        <option value='SALES'>გაყიდვები</option>
-                        <option value='MARKETING'>მარკეტინგი</option>
-                        <option value='FINANCE'>ფინანსები</option>
-                        <option value='DESIGN'>დიზაინი</option>
-                        <option value='MANAGEMENT'>მენეჯმენტი</option>
-                        <option value='LOGISTICS'>ლოჯისტიკა</option>
-                        <option value='HEALTHCARE'>მედიცინა</option>
-                        <option value='EDUCATION'>განათლება</option>
-                        <option value='HOSPITALITY'>სტუმართმოყვარეობა</option>
-                        <option value='OTHER'>სხვა</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className='text-[11.5px] text-gray-500 block mb-1.5 font-medium'>განაცხადის მეთოდი</label>
-                      <select value={jobForm.applicationMethod} onChange={e => setJobForm(p => ({ ...p, applicationMethod: e.target.value }))}
-                        className={SELECT_CLS + ' w-full'}>
-                        <option value='CV_ONLY'>მხოლოდ CV</option>
-                        <option value='FORM_ONLY'>მხოლოდ ფორმა</option>
-                        <option value='BOTH'>CV და ფორმა</option>
-                      </select>
-                    </div>
-                  </div>
-                  {/* Pricing tier */}
-                  <div>
-                    <label className='text-[11.5px] text-gray-500 block mb-2 font-medium'>განთავსების პაკეტი</label>
-                    <div className='grid grid-cols-3 gap-3'>
-                      {[
-                        { tier: 'USUAL',        price: 35, label: 'სტანდარტული', color: 'brand',  perks: ['ძებნაში გამოჩნდება', '30 დღე', 'განაცხადების მართვა'] },
-                        { tier: 'PREMIUM',      price: 65, label: 'პრემიუმ',     color: 'amber',  perks: ['კარუსელში გამოჩენა', 'Premium ბეჯი', 'პრიორიტეტი ძებნაში'] },
-                        { tier: 'PREMIUM_PLUS', price: 95, label: 'პრემიუმ+',    color: 'brand+', perks: ['Top კარუსელი', 'მაქს. პრიორიტეტი', 'Premium+ ბეჯი'] },
-                      ].map(({ tier, price, label, color, perks }) => (
-                        <button
-                          key={tier}
-                          type='button'
-                          onClick={() => setJobForm(p => ({ ...p, pricingTier: tier }))}
-                          className={[
-                            'relative rounded-xl border-2 p-3.5 text-left transition-all duration-150',
-                            jobForm.pricingTier === tier
-                              ? tier === 'PREMIUM_PLUS'
-                                ? 'border-brand-500 bg-brand-50 shadow-md'
-                                : tier === 'PREMIUM'
-                                  ? 'border-amber-400 bg-amber-50'
-                                  : 'border-brand-400 bg-brand-50'
-                              : 'border-gray-100 bg-white hover:border-gray-200',
-                          ].join(' ')}
-                        >
-                          {tier === 'PREMIUM' && (
-                            <span className='absolute -top-2 left-3 bg-amber-400 text-white text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wider uppercase'>Premium</span>
-                          )}
-                          {tier === 'PREMIUM_PLUS' && (
-                            <span className='absolute -top-2 left-3 bg-brand-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wider uppercase flex items-center gap-1'>
-                              <svg width='8' height='8' viewBox='0 0 24 24' fill='currentColor' className='text-amber-300'>
-                                <path d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'/>
-                              </svg>
-                              Premium+
-                            </span>
-                          )}
-                          {jobForm.pricingTier === tier && (
-                            <span className={[
-                              'absolute top-3 right-3 w-3.5 h-3.5 rounded-full flex items-center justify-center',
-                              tier === 'PREMIUM_PLUS' ? 'bg-brand-600' : tier === 'PREMIUM' ? 'bg-amber-400' : 'bg-brand-500',
-                            ].join(' ')}>
-                              <svg className='w-2 h-2 text-white' fill='none' viewBox='0 0 10 10'>
-                                <path d='M2 5l2.5 2.5L8 3' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round'/>
-                              </svg>
-                            </span>
-                          )}
-                          <p className='text-[15px] font-bold text-gray-900'>{price} ₾</p>
-                          <p className='text-[12px] font-medium text-gray-600 mt-0.5'>{label}</p>
-                          <ul className='mt-1.5 space-y-0.5'>
-                            {perks.map(p => (
-                              <li key={p} className='text-[11px] text-gray-400'>✓ {p}</li>
-                            ))}
-                          </ul>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
 
-                  <div className='pt-1 flex items-center justify-between'>
-                    <p className='text-[12px] text-gray-400'>
-                      სულ: <span className='font-semibold text-gray-700'>{jobForm.pricingTier === 'PREMIUM_PLUS' ? '95 ₾' : jobForm.pricingTier === 'PREMIUM' ? '65 ₾' : '35 ₾'}</span>
-                    </p>
-                    <button
-                      type='submit'
-                      disabled={paying}
-                      className='h-10 px-6 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl text-[13px] font-medium transition-colors duration-150'>
-                      {paying ? 'გადამისამართება...' : 'გადახდა და განთავსება'}
-                    </button>
-                  </div>
-                </form>
+                    {/* Pricing tier */}
+                    <div className='pt-2'>
+                      <label className='text-xs text-text-secondary block mb-3 font-medium ml-1'>განთავსების პაკეტი</label>
+                      <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
+                        {[
+                          { tier: 'USUAL',        price: 35, label: 'სტანდარტული', color: 'brand',  perks: ['ძებნაში გამოჩნდება', '30 დღე', 'განაცხადების მართვა'] },
+                          { tier: 'PREMIUM',      price: 65, label: 'პრემიუმ',     color: 'amber',  perks: ['კარუსელში გამოჩენა', 'Premium ბეჯი', 'პრიორიტეტი ძებნაში'] },
+                          { tier: 'PREMIUM_PLUS', price: 95, label: 'პრემიუმ+',    color: 'brand+', perks: ['Top კარუსელი', 'მაქს. პრიორიტეტი', 'Premium+ ბეჯი'] },
+                        ].map(({ tier, price, label, perks }) => (
+                          <button
+                            key={tier}
+                            type='button'
+                            onClick={() => setJobForm(p => ({ ...p, pricingTier: tier }))}
+                            className={[
+                              'relative rounded-2xl border-2 p-4 text-left transition-all duration-200 group/tier',
+                              jobForm.pricingTier === tier
+                                ? tier === 'PREMIUM_PLUS'
+                                  ? 'border-brand-500 bg-brand-500/10 shadow-[0_0_15px_rgba(123,95,228,0.1)]'
+                                  : tier === 'PREMIUM'
+                                    ? 'border-amber-400 bg-amber-400/10 shadow-[0_0_15px_rgba(245,158,11,0.1)]'
+                                    : 'border-brand-400 bg-brand-400/10'
+                                : 'border-border-subtle bg-surface-100 hover:border-border-strong',
+                            ].join(' ')}
+                          >
+                            {tier === 'PREMIUM' && (
+                              <span className='absolute -top-2.5 left-4 bg-amber-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full tracking-widest uppercase shadow-sm'>Premium</span>
+                            )}
+                            {tier === 'PREMIUM_PLUS' && (
+                              <span className='absolute -top-2.5 left-4 bg-brand-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full tracking-widest uppercase flex items-center gap-1 shadow-sm'>
+                                <svg width='8' height='8' viewBox='0 0 24 24' fill='currentColor' className='text-amber-400'>
+                                  <path d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'/>
+                                </svg>
+                                Premium+
+                              </span>
+                            )}
+                            {jobForm.pricingTier === tier && (
+                              <span className={[
+                                'absolute top-3 right-3 w-5 h-5 rounded-full flex items-center justify-center border border-white/20',
+                                tier === 'PREMIUM_PLUS' ? 'bg-brand-500' : tier === 'PREMIUM' ? 'bg-amber-400' : 'bg-brand-400',
+                              ].join(' ')}>
+                                <svg className='w-2.5 h-2.5 text-white' fill='none' viewBox='0 0 10 10'>
+                                  <path d='M2 5l2.5 2.5L8 3' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/>
+                                </svg>
+                              </span>
+                            )}
+                            <p className='text-xl font-black text-text-primary tracking-tight'>{price} ₾</p>
+                            <p className='text-xs font-bold text-text-secondary mt-0.5'>{label}</p>
+                            <ul className='mt-3 space-y-1.5'>
+                              {perks.map(p => (
+                                <li key={p} className='text-[11px] text-text-muted flex items-start gap-1.5'>
+                                  <svg className='w-3 h-3 text-success mt-0.5 flex-shrink-0' fill='none' viewBox='0 0 24 24' stroke='currentColor' strokeWidth='3'>
+                                    <path d='M5 13l4 4L19 7' />
+                                  </svg>
+                                  {p}
+                                </li>
+                              ))}
+                            </ul>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className='flex items-center justify-between pt-4 border-t border-border-subtle'>
+                      <p className='text-xs text-text-muted'>
+                        სულ გადასახდელი: <span className='font-bold text-text-primary text-md ml-1'>{jobForm.pricingTier === 'PREMIUM_PLUS' ? '95 ₾' : jobForm.pricingTier === 'PREMIUM' ? '65 ₾' : '35 ₾'}</span>
+                      </p>
+                      <Button type='submit' loading={paying} className='px-10'>
+                        გადახდა და განთავსება
+                      </Button>
+                    </div>
+                  </form>
+                </Card>
               )}
 
-              <div className='flex flex-col gap-2'>
+              <div className='flex flex-col gap-3'>
                 {jobs.map(job => (
-                  <div key={job.id} className={[
-                    'bg-white border border-gray-100 rounded-xl px-5 py-4',
-                    job.paymentStatus === 'PENDING' ? 'opacity-70 border-l-4 border-l-amber-300' : '',
+                  <Card key={job.id} padding='md' className={[
+                    'transition-all duration-200',
+                    job.paymentStatus === 'PENDING' ? 'opacity-60 border-amber-500/30' : 'hover:border-border-strong',
                   ].join(' ')}>
-                    {job.paymentStatus === 'PENDING' && (
-                      <p className='text-[11px] text-amber-600 font-medium mb-2'>⏳ გადახდა არ დასრულებულა — ვაკანსია არ ჩანს სხვებისთვის</p>
-                    )}
-                    <div className='flex items-center gap-4'>
+                    <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
                       <div className='flex-1 min-w-0'>
-                        <div className='flex items-center gap-2.5 mb-1'>
-                          <p className='font-medium text-[13.5px] text-gray-900 truncate'>{job.title}</p>
-                          <span className={'text-[10.5px] px-2 py-0.5 rounded-md border font-medium flex-shrink-0 ' +
-                            (job.status === 'HIRING'
-                              ? 'bg-teal-50 text-teal-700 border-teal-200'
-                              : 'bg-gray-100 text-gray-500 border-gray-200')}>
+                        <div className='flex items-center gap-2 flex-wrap mb-1.5'>
+                          <h4 className='font-bold text-md text-text-primary truncate'>{job.title}</h4>
+                          <Badge variant={job.status === 'HIRING' ? 'success' : 'default'} size='sm' dot>
                             {job.status === 'HIRING' ? 'აქტიური' : 'დახურული'}
-                          </span>
+                          </Badge>
                           {job.pricingTier === 'PREMIUM_PLUS' && (
-                            <span className='text-[9px] px-1.5 py-0.5 rounded-full bg-brand-600 text-white font-bold uppercase tracking-wide flex-shrink-0'>
-                              Premium+
-                            </span>
+                            <Badge variant='brand' size='sm'>PREMIUM+</Badge>
                           )}
                           {job.pricingTier === 'PREMIUM' && (
-                            <span className='text-[9px] px-1.5 py-0.5 rounded-full bg-amber-400 text-white font-bold uppercase tracking-wide flex-shrink-0'>
-                              Premium
-                            </span>
+                            <Badge variant='premium' size='sm'>PREMIUM</Badge>
                           )}
                         </div>
-                        <p className='text-[12px] text-gray-400'>
-                          {(job.salary || 0).toLocaleString()} ₾
-                          {job.location ? ' · ' + job.location : ''}
-                          {' · '}ნახვა: {job.views}
-                          {' · '}განაცხადი: {job._count?.applications || 0}
-                          {' · '}{job.priceAmount || 35} ₾ გადახდილი
-                        </p>
+                        <div className='flex items-center gap-2 text-xs text-text-muted flex-wrap'>
+                          <span className='font-bold text-text-secondary'>{(job.salary || 0).toLocaleString()} ₾</span>
+                          {job.location && (
+                            <>
+                              <span className='opacity-30'>·</span>
+                              <span>{job.location}</span>
+                            </>
+                          )}
+                          <span className='opacity-30'>·</span>
+                          <span>{job.views} ნახვა</span>
+                          <span className='opacity-30'>·</span>
+                          <span>{job._count?.applications || 0} განაცხადი</span>
+                        </div>
                       </div>
-                      <div className='flex items-center gap-3 flex-shrink-0'>
-                        <button onClick={() => viewApplicants(job)}
-                          className='text-[12px] text-brand-600 hover:text-brand-700 font-medium transition-colors duration-150'>
+
+                      <div className='flex items-center gap-2 flex-shrink-0'>
+                        <Button size='sm' variant='secondary' onClick={() => viewApplicants(job)}>
                           განმცხადებლები
-                        </button>
+                        </Button>
                         {job.status === 'HIRING' && job.paymentStatus === 'PAID' && (
-                          <button onClick={() => handleCloseJob(job.id)}
-                            className='text-[12px] text-gray-400 hover:text-gray-600 transition-colors duration-150'>
+                          <Button size='sm' variant='ghost' onClick={() => handleCloseJob(job.id)} className='text-text-muted hover:text-text-primary'>
                             დახურვა
-                          </button>
+                          </Button>
                         )}
-                        <button onClick={() => handleDeleteJob(job.id)}
-                          className='text-[12px] text-red-400 hover:text-red-600 transition-colors duration-150'>
-                          წაშლა
-                        </button>
+                        <Button size='sm' variant='ghost' onClick={() => handleDeleteJob(job.id)} className='text-danger hover:bg-danger/10'>
+                          <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+                            <path d='M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2'/>
+                          </svg>
+                        </Button>
                       </div>
                     </div>
-                  </div>
+                    {job.paymentStatus === 'PENDING' && (
+                      <div className='mt-3 pt-3 border-t border-amber-500/20 flex items-center gap-2 text-[11px] text-amber-500 font-medium'>
+                        <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='3'>
+                          <circle cx='12' cy='12' r='10'/><line x1='12' y1='8' x2='12' y2='12'/><line x1='12' y1='16' x2='12.01' y2='16'/>
+                        </svg>
+                        გადახდა არ დასრულებულა. ვაკანსია არ ჩანს ძებნაში.
+                      </div>
+                    )}
+                  </Card>
                 ))}
-                {jobs.length === 0 && (
-                  <div className='bg-white border border-gray-100 rounded-xl text-center py-14'>
-                    <p className='text-[13px] text-gray-400 mb-1'>ვაკანსია ჯერ არ გაქვთ</p>
-                    <button
-                      onClick={() => setShowJobForm(true)}
-                      className='text-[12.5px] text-brand-600 hover:underline font-medium'>
-                      + ახალი ვაკანსიის დამატება
-                    </button>
-                  </div>
-                )}
               </div>
+
+              {jobs.length === 0 && (
+                <Card className='text-center py-16 bg-surface-50/50 border-dashed'>
+                  <div className='w-12 h-12 bg-surface-100 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-border-subtle'>
+                    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.5' className='text-text-muted'>
+                      <path d='M12 5v14M5 12h14'/>
+                    </svg>
+                  </div>
+                  <p className='text-md font-bold text-text-primary mb-1'>ვაკანსიები არ გაქვთ</p>
+                  <p className='text-sm text-text-muted mb-6'>განათავსეთ პირველი ვაკანსიაAz-ზე</p>
+                  <Button onClick={() => setShowJobForm(true)}>+ ახალი ვაკანსია</Button>
+                </Card>
+              )}
             </div>
           )}
 
           {/* ════ EMPLOYER: Applicants ════════════════════════ */}
           {activePanel === 'applicants' && user?.role === 'EMPLOYER' && (
             <div>
-              <div className='flex items-center justify-between mb-5'>
+              <div className='flex items-center justify-between mb-6'>
                 <div>
-                  <p className='font-semibold text-[14px] text-gray-900'>
+                  <h3 className='font-bold text-lg text-text-primary tracking-tight'>
                     {selectedJob ? selectedJob.title : 'განმცხადებლები'}
-                  </p>
+                  </h3>
                   {selectedJob && (
-                    <p className='text-[12px] text-gray-400 mt-0.5'>
+                    <p className='text-xs text-text-muted mt-1 font-medium'>
                       {applicants.length} განმცხადებელი
                     </p>
                   )}
                 </div>
-                <button
+                <Button
+                  size='sm'
+                  variant='secondary'
                   onClick={() => setActivePanel('jobs')}
-                  className='inline-flex items-center gap-1.5 text-[12.5px] text-gray-400 hover:text-gray-700 transition-colors duration-150'>
-                  <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-                    <path d='M19 12H5M12 19l-7-7 7-7'/>
-                  </svg>
+                  leadingIcon={
+                    <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5'>
+                      <path d='M19 12H5M12 19l-7-7 7-7'/>
+                    </svg>
+                  }
+                >
                   უკან
-                </button>
+                </Button>
               </div>
 
               {!selectedJob && (
-                <div className='bg-white border border-gray-100 rounded-xl text-center py-14 text-[13px] text-gray-400'>
-                  ჯერ ვაკანსია არ არის არჩეული
-                </div>
+                <Card className='text-center py-16 bg-surface-50/50 border-dashed'>
+                  <p className='text-sm text-text-muted'>ჯერ ვაკანსია არ არის არჩეული</p>
+                </Card>
               )}
 
-              <div className='flex flex-col gap-2'>
+              <div className='flex flex-col gap-3'>
                 {applicants.map(app => (
-                  <div key={app.id} className='bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-3.5'>
-                    <div className='w-9 h-9 rounded-full bg-surface-100 flex items-center justify-center text-[12px] font-semibold text-gray-500 flex-shrink-0 border border-gray-100'>
-                      {((app.candidate.firstName || '') + ' ' + (app.candidate.lastName || '')).trim().slice(0, 2).toUpperCase()}
+                  <Card key={app.id} padding='md' className='hover:border-border-strong transition-colors'>
+                    <div className='flex items-center gap-4'>
+                      <div className='w-11 h-11 rounded-xl bg-surface-200 flex items-center justify-center text-[13px] font-bold text-text-secondary flex-shrink-0 border border-border-subtle shadow-sm'>
+                        {((app.candidate.firstName || '') + ' ' + (app.candidate.lastName || '')).trim().slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className='flex-1 min-w-0'>
+                        <p className='text-md font-bold text-text-primary'>
+                          {(app.candidate.firstName || '') + ' ' + (app.candidate.lastName || '')}
+                        </p>
+                        {app.coverLetter && (
+                          <p className='text-xs text-text-muted truncate mt-1 italic'>&ldquo;{app.coverLetter}&rdquo;</p>
+                        )}
+                        <p className='text-[10px] text-text-muted mt-1 uppercase tracking-wider font-bold opacity-60'>
+                          {new Date(app.appliedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className='flex items-center gap-4'>
+                        {(app.cvUrl || app.candidate?.cvUrl) && (
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            className='text-brand-400 hover:text-brand-300'
+                            onClick={() => {
+                              api.post('/applications/' + app.id + '/view-cv');
+                              window.open(assetUrl(app.cvUrl || app.candidate?.cvUrl), '_blank');
+                            }}
+                          >
+                            CV ↗
+                          </Button>
+                        )}
+                        <select
+                          value={app.status}
+                          onChange={e => updateStatus(app.id, e.target.value)}
+                          className={SELECT_CLS + ' h-9'}>
+                          <option value='PENDING'>მოლოდინში</option>
+                          <option value='REVIEWING'>განიხილება</option>
+                          <option value='SHORTLISTED'>შორტლისტი</option>
+                          <option value='REJECTED'>უარყოფილია</option>
+                          <option value='HIRED'>აყვანილია</option>
+                        </select>
+                      </div>
                     </div>
-                    <div className='flex-1 min-w-0'>
-                      <p className='text-[13.5px] font-medium text-gray-900'>
-                        {(app.candidate.firstName || '') + ' ' + (app.candidate.lastName || '')}
-                      </p>
-                      {app.coverLetter && (
-                        <p className='text-[12px] text-gray-400 truncate mt-0.5'>&ldquo;{app.coverLetter}&rdquo;</p>
-                      )}
-                      <p className='text-[11.5px] text-gray-300 mt-0.5'>
-                        {new Date(app.appliedAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    {(app.cvUrl || app.candidate?.cvUrl) && (
-                      <a
-                        href={assetUrl(app.cvUrl || app.candidate?.cvUrl)}
-                        target='_blank'
-                        rel='noreferrer'
-                        className='flex-shrink-0 text-[12px] font-medium text-brand-600 hover:underline'
-                        onClick={() => api.post('/applications/' + app.id + '/view-cv')}>
-                        CV ↗
-                      </a>
-                    )}
-                    <select
-                      value={app.status}
-                      onChange={e => updateStatus(app.id, e.target.value)}
-                      className='text-[12px] bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-brand-500 flex-shrink-0 text-gray-800'>
-                      <option value='PENDING'>მოლოდინში</option>
-                      <option value='REVIEWING'>განიხილება</option>
-                      <option value='SHORTLISTED'>შორტლისტი</option>
-                      <option value='REJECTED'>უარყოფილია</option>
-                      <option value='HIRED'>აყვანილია</option>
-                    </select>
-                  </div>
+                  </Card>
                 ))}
                 {selectedJob && applicants.length === 0 && (
-                  <div className='bg-white border border-gray-100 rounded-xl text-center py-14 text-[13px] text-gray-400'>
-                    განმცხადებელი ჯერ არ არის
-                  </div>
+                  <Card className='text-center py-16 bg-surface-50/50 border-dashed'>
+                    <p className='text-sm text-text-muted'>განმცხადებელი ჯერ არ არის</p>
+                  </Card>
                 )}
               </div>
             </div>
@@ -670,40 +683,46 @@ export default function ProfilePage() {
             const box = myBoxes[0] || null;
             return (
               <div>
-                <p className='font-semibold text-[14px] text-gray-900 mb-4'>CV Box</p>
+                <h3 className='font-bold text-lg text-text-primary tracking-tight mb-6'>CV Box</h3>
 
                 {!box ? (
-                  <div className='bg-white border border-gray-100 rounded-2xl text-center py-14'>
-                    <p className='text-[13px] text-gray-400 mb-1'>CV Box ჯერ არ გაქვთ</p>
-                    <p className='text-[12px] text-gray-300 mb-4'>კანდიდატები პირდაპირ გამოგიგზავნიანთ CV-ს</p>
-                    <button onClick={handleCreateBox}
-                      className='h-9 px-5 bg-brand-600 hover:bg-brand-700 text-white text-[12.5px] font-medium rounded-lg transition-colors duration-150'>
-                      + CV Box-ის შექმნა
-                    </button>
-                  </div>
+                  <Card className='text-center py-16 bg-surface-50/50 border-dashed'>
+                    <div className='w-12 h-12 bg-surface-100 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-border-subtle'>
+                      <svg width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.5' className='text-text-muted'>
+                        <path d='M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2'/><circle cx='12' cy='7' r='4'/>
+                      </svg>
+                    </div>
+                    <p className='text-md font-bold text-text-primary mb-1'>CV Box ჯერ არ გაქვთ</p>
+                    <p className='text-sm text-text-muted mb-6'>კანდიდატები პირდაპირ გამოგიგზავნიანთ CV-ს</p>
+                    <Button onClick={handleCreateBox}>+ CV Box-ის შექმნა</Button>
+                  </Card>
                 ) : (
-                  <div className='bg-white border border-gray-100 rounded-2xl px-5 py-4 flex items-center justify-between gap-4'>
-                    <div>
-                      <div className='flex items-center gap-2 mb-1'>
-                        <p className='font-semibold text-[14px] text-gray-900'>Drop your CV here</p>
-                        <span className={'text-[10px] px-1.5 py-0.5 rounded-md border font-medium ' +
-                          (box.isActive ? 'bg-teal-50 text-teal-700 border-teal-200' : 'bg-gray-100 text-gray-400 border-gray-200')}>
-                          {box.isActive ? 'აქტიური' : 'გათიშული'}
-                        </span>
+                  <Card padding='lg' className='flex flex-col sm:flex-row sm:items-center justify-between gap-6 hover:border-border-strong transition-all'>
+                    <div className='flex items-center gap-4'>
+                      <div className='w-12 h-12 rounded-2xl bg-brand-600/10 border border-brand-400/20 flex items-center justify-center text-brand-400'>
+                        <svg width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+                          <path d='M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z'/>
+                        </svg>
                       </div>
-                      <p className='text-[12px] text-gray-400'>{box._count?.submissions ?? 0} CV გამოგზავნილი</p>
+                      <div>
+                        <div className='flex items-center gap-3 mb-1'>
+                          <p className='font-bold text-md text-text-primary'>Drop your CV here</p>
+                          <Badge variant={box.isActive ? 'success' : 'default'} dot>
+                            {box.isActive ? 'აქტიური' : 'გათიშული'}
+                          </Badge>
+                        </div>
+                        <p className='text-xs text-text-muted font-medium'>{box._count?.submissions ?? 0} CV გამოგზავნილი</p>
+                      </div>
                     </div>
-                    <div className='flex items-center gap-3 flex-shrink-0'>
-                      <button onClick={() => toggleBoxActive(box)}
-                        className='text-[12px] text-gray-400 hover:text-gray-600 transition-colors duration-150'>
+                    <div className='flex items-center gap-3'>
+                      <Button variant='secondary' size='sm' onClick={() => toggleBoxActive(box)}>
                         {box.isActive ? 'გათიშვა' : 'გააქტიურება'}
-                      </button>
-                      <button onClick={() => viewBoxSubmissions(box)}
-                        className='text-[12px] font-medium text-brand-600 hover:text-brand-700 transition-colors duration-150'>
-                        CV-ები
-                      </button>
+                      </Button>
+                      <Button size='sm' onClick={() => viewBoxSubmissions(box)}>
+                        CV-ების ნახვა
+                      </Button>
                     </div>
-                  </div>
+                  </Card>
                 )}
               </div>
             );
@@ -712,23 +731,23 @@ export default function ProfilePage() {
           {/* ════ EMPLOYER: Box Submissions ══════════════════ */}
           {activePanel === 'box-submissions' && user?.role === 'EMPLOYER' && (
             <div>
-              <div className='flex items-center justify-between mb-5'>
+              <div className='flex items-center justify-between mb-6'>
                 <div>
-                  <p className='font-semibold text-[14px] text-gray-900'>
+                  <h3 className='font-bold text-lg text-text-primary tracking-tight'>
                     {selectedBox ? selectedBox.title : 'CV-ები'}
-                  </p>
+                  </h3>
                   {selectedBox && (
-                    <p className='text-[12px] text-gray-400 mt-0.5'>
+                    <p className='text-xs text-text-muted mt-1 font-medium'>
                       {boxSubmissions.length} CV გამოგზავნილი
                     </p>
                   )}
                 </div>
-                <div className='flex items-center gap-2'>
+                <div className='flex items-center gap-3'>
                   <select
                     value={subCatFilter}
                     onChange={e => setSubCatFilter(e.target.value)}
-                    className='h-8 text-[12px] bg-white border border-gray-200 rounded-lg px-2.5 focus:outline-none focus:border-brand-500 text-gray-800'>
-                    <option value='ALL'>ყველა</option>
+                    className={SELECT_CLS + ' h-9 px-3'}>
+                    <option value='ALL'>ყველა კატეგორია</option>
                     <option value='IT'>IT</option>
                     <option value='SALES'>გაყიდვები</option>
                     <option value='MARKETING'>მარკეტინგი</option>
@@ -737,62 +756,73 @@ export default function ProfilePage() {
                     <option value='MANAGEMENT'>მენეჯმენტი</option>
                     <option value='OTHER'>სხვა</option>
                   </select>
-                  <button
+                  <Button
+                    size='sm'
+                    variant='secondary'
                     onClick={() => setActivePanel('cvboxes')}
-                    className='inline-flex items-center gap-1.5 text-[12.5px] text-gray-400 hover:text-gray-700 transition-colors duration-150'>
-                    <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-                      <path d='M19 12H5M12 19l-7-7 7-7'/>
-                    </svg>
+                    leadingIcon={
+                      <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5'>
+                        <path d='M19 12H5M12 19l-7-7 7-7'/>
+                      </svg>
+                    }
+                  >
                     უკან
-                  </button>
+                  </Button>
                 </div>
               </div>
 
-              <div className='flex flex-col gap-2'>
+              <div className='flex flex-col gap-3'>
                 {boxSubmissions
                   .filter(s => subCatFilter === 'ALL' || (s.categories || []).includes(subCatFilter))
                   .map(sub => (
-                  <div key={sub.id} className='bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-3.5'>
-                    <div className='w-9 h-9 rounded-full bg-surface-100 flex items-center justify-center text-[12px] font-semibold text-gray-500 flex-shrink-0 border border-gray-100'>
-                      {sub.candidateName.slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className='flex-1 min-w-0'>
-                      <p className='text-[13.5px] font-medium text-gray-900'>{sub.candidateName}</p>
-                      <p className='text-[12px] text-gray-400 mt-0.5'>{sub.candidateEmail}</p>
-                      {(sub.categories || []).length > 0 && (
-                        <div className='flex flex-wrap gap-1 mt-1.5'>
-                          {sub.categories.map(cat => (
-                            <span key={cat} className='inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-brand-50 text-brand-600 border border-brand-100'>
-                              {CAT_LABEL_GEO[cat] || cat}
-                            </span>
-                          ))}
+                  <Card key={sub.id} padding='md' className='hover:border-border-strong transition-colors'>
+                    <div className='flex items-center gap-4'>
+                      <div className='w-11 h-11 rounded-xl bg-surface-200 flex items-center justify-center text-[13px] font-bold text-text-secondary flex-shrink-0 border border-border-subtle shadow-sm'>
+                        {sub.candidateName.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className='flex-1 min-w-0'>
+                        <div className='flex items-center gap-3 mb-1'>
+                          <p className='text-md font-bold text-text-primary'>{sub.candidateName}</p>
+                          <span className='text-[10px] text-text-muted opacity-60 font-bold uppercase tracking-wider'>
+                            {new Date(sub.submittedAt).toLocaleDateString()}
+                          </span>
                         </div>
+                        <p className='text-xs text-text-muted font-medium'>{sub.candidateEmail}</p>
+                        
+                        {(sub.categories || []).length > 0 && (
+                          <div className='flex flex-wrap gap-1.5 mt-2.5'>
+                            {sub.categories.map(cat => (
+                              <Tag key={cat} variant='brand' size='xs'>
+                                {CAT_LABEL_GEO[cat] || cat}
+                              </Tag>
+                            ))}
+                          </div>
+                        )}
+                        {sub.message && (
+                          <p className='text-xs text-text-muted mt-2 italic line-clamp-1 opacity-80'>&ldquo;{sub.message}&rdquo;</p>
+                        )}
+                      </div>
+                      {sub.cvUrl && (
+                        <Button
+                          variant='primary'
+                          size='sm'
+                          className='flex-shrink-0'
+                          onClick={async () => {
+                            try {
+                              await api.post(`/company-boxes/${selectedBox.id}/submissions/${sub.id}/view`);
+                            } catch (_) {}
+                            window.open(sub.cvUrl, '_blank', 'noreferrer');
+                          }}>
+                          CV ↗
+                        </Button>
                       )}
-                      {sub.message && (
-                        <p className='text-[11.5px] text-gray-400 mt-1 truncate'>&ldquo;{sub.message}&rdquo;</p>
-                      )}
-                      <p className='text-[11px] text-gray-300 mt-0.5'>
-                        {new Date(sub.submittedAt).toLocaleDateString()}
-                      </p>
                     </div>
-                    {sub.cvUrl && (
-                      <button
-                        onClick={async () => {
-                          try {
-                            await api.post(`/company-boxes/${selectedBox.id}/submissions/${sub.id}/view`);
-                          } catch (_) {}
-                          window.open(sub.cvUrl, '_blank', 'noreferrer');
-                        }}
-                        className='flex-shrink-0 text-[12px] font-medium text-brand-600 hover:underline'>
-                        CV ↗
-                      </button>
-                    )}
-                  </div>
+                  </Card>
                 ))}
                 {boxSubmissions.length === 0 && (
-                  <div className='bg-white border border-gray-100 rounded-xl text-center py-14 text-[13px] text-gray-400'>
-                    CV ჯერ არ არის გამოგზავნილი
-                  </div>
+                  <Card className='text-center py-16 bg-surface-50/50 border-dashed'>
+                    <p className='text-sm text-text-muted'>CV ჯერ არ არის გამოგზავნილი</p>
+                  </Card>
                 )}
               </div>
             </div>
@@ -801,115 +831,112 @@ export default function ProfilePage() {
           {/* ════ EMPLOYER: Analytics ════════════════════════ */}
           {activePanel === 'analytics' && user?.role === 'EMPLOYER' && (
             <div>
-              <p className='font-semibold text-[14px] text-gray-900 mb-5'>ანალიტიკა</p>
-              <div className='grid grid-cols-2 gap-3 mb-6'>
+              <h3 className='font-bold text-lg text-text-primary tracking-tight mb-6'>ანალიტიკა</h3>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6'>
                 {[
                   { label: 'ნახვები სულ',      value: jobs.reduce((a, j) => a + j.views, 0).toLocaleString() },
                   { label: 'განაცხადები სულ',   value: jobs.reduce((a, j) => a + (j._count?.applications || 0), 0) },
                   { label: 'აქტიური ვაკანსია',  value: jobs.filter(j => j.status === 'HIRING').length },
                   { label: 'დახურული ვაკანსია', value: jobs.filter(j => j.status === 'CLOSED').length },
                 ].map(stat => (
-                  <div key={stat.label} className='bg-white border border-gray-100 rounded-xl p-5'>
-                    <p className='text-[10.5px] text-gray-400 uppercase tracking-wider mb-2'>{stat.label}</p>
-                    <p className='font-display font-semibold text-[26px] text-gray-900 leading-none'>{stat.value}</p>
-                  </div>
+                  <Card key={stat.label} padding='md' className='flex flex-col justify-between min-h-[100px]'>
+                    <p className='text-[10px] text-text-muted uppercase tracking-widest font-bold mb-3'>{stat.label}</p>
+                    <p className='font-display font-bold text-[28px] text-text-primary leading-none tracking-tight'>{stat.value}</p>
+                  </Card>
                 ))}
               </div>
-              <div className='bg-white border border-gray-100 rounded-xl p-10 text-center'>
-                <p className='text-[13px] text-gray-400'>გრაფიკები მალე დაემატება</p>
-              </div>
+              <Card className='text-center py-16 bg-surface-50/50 border-dashed'>
+                <p className='text-sm text-text-muted font-medium'>გრაფიკები მალე დაემატება</p>
+              </Card>
             </div>
           )}
 
           {/* ════ EMPLOYER: Settings ════════════════════════ */}
           {activePanel === 'settings' && user?.role === 'EMPLOYER' && (
             <div>
-              <p className='font-semibold text-[14px] text-gray-900 mb-5'>კომპანიის პროფილი</p>
-              <form onSubmit={handleUpdateProfile} className='bg-white border border-gray-100 rounded-2xl p-6 space-y-4'>
-                <div className='grid grid-cols-2 gap-4'>
-                  <div>
-                    <label className='text-[11.5px] text-gray-500 block mb-1.5 font-medium'>კომპანიის სახელი</label>
-                    <input value={form.companyName || ''} onChange={e => setForm(p => ({ ...p, companyName: e.target.value }))}
-                      className={INPUT} />
+              <h3 className='font-bold text-lg text-text-primary tracking-tight mb-6'>კომპანიის პროფილი</h3>
+              <Card padding='lg'>
+                <form onSubmit={handleUpdateProfile} className='space-y-6'>
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
+                    <div>
+                      <label className='text-xs text-text-secondary block mb-2 font-medium ml-1'>კომპანიის სახელი</label>
+                      <input value={form.companyName || ''} onChange={e => setForm(p => ({ ...p, companyName: e.target.value }))}
+                        className={INPUT} />
+                    </div>
+                    <div>
+                      <label className='text-xs text-text-secondary block mb-2 font-medium ml-1'>ვებსაიტი</label>
+                      <input value={form.website || ''} onChange={e => setForm(p => ({ ...p, website: e.target.value }))}
+                        placeholder='https://company.ge'
+                        className={INPUT} />
+                    </div>
                   </div>
                   <div>
-                    <label className='text-[11.5px] text-gray-500 block mb-1.5 font-medium'>ვებსაიტი</label>
-                    <input value={form.website || ''} onChange={e => setForm(p => ({ ...p, website: e.target.value }))}
-                      placeholder='https://company.ge'
+                    <label className='text-xs text-text-secondary block mb-2 font-medium ml-1'>კომპანიის აღწერა</label>
+                    <textarea value={form.description || ''} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={6}
+                      placeholder='მოკლე ინფორმაცია კომპანიის შესახებ...'
+                      className={TEXTAREA} />
+                  </div>
+                  <div>
+                    <label className='text-xs text-text-secondary block mb-2 font-medium ml-1'>მობილური</label>
+                    <input value={form.user?.phone || form.phone || ''} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
+                      placeholder='+995 555 00 00 00'
                       className={INPUT} />
                   </div>
-                </div>
-                <div>
-                  <label className='text-[11.5px] text-gray-500 block mb-1.5 font-medium'>კომპანიის აღწერა</label>
-                  <textarea value={form.description || ''} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={4}
-                    placeholder='მოკლე ინფორმაცია კომპანიის შესახებ...'
-                    className={TEXTAREA} />
-                </div>
-                <div>
-                  <label className='text-[11.5px] text-gray-500 block mb-1.5 font-medium'>მობილური</label>
-                  <input value={form.user?.phone || form.phone || ''} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
-                    placeholder='+995 555 00 00 00'
-                    className={INPUT} />
-                </div>
-                <div className='pt-1'>
-                  <button type='submit' className='h-10 px-6 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-[13px] font-medium transition-colors duration-150'>
-                    შენახვა
-                  </button>
-                </div>
-              </form>
+                  <div className='flex justify-end pt-4 border-t border-border-subtle'>
+                    <Button type='submit' className='px-12'>პროფილის შენახვა</Button>
+                  </div>
+                </form>
+              </Card>
             </div>
           )}
 
           {/* ════ CANDIDATE: Applications ════════════════════ */}
           {activePanel === 'applications' && user?.role === 'CANDIDATE' && (
             <div>
-              {/* Stats */}
-              <div className='grid grid-cols-3 gap-3 mb-6'>
+              {/* Stats row */}
+              <div className='grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8'>
                 {[
                   { label: 'განაცხადები', value: applications.length },
                   { label: 'განხილვაში',  value: applications.filter(a => a.status === 'REVIEWING' || a.status === 'SHORTLISTED').length },
                   { label: 'შორტლისტი',  value: applications.filter(a => a.status === 'SHORTLISTED').length },
                 ].map(stat => (
-                  <div key={stat.label} className='bg-white border border-gray-100 rounded-xl p-5'>
-                    <p className='text-[10.5px] text-gray-400 uppercase tracking-wider mb-2'>{stat.label}</p>
-                    <p className='font-display font-semibold text-[26px] text-gray-900 leading-none'>{stat.value}</p>
-                  </div>
+                  <Card key={stat.label} padding='md' className='flex flex-col justify-between min-h-[100px]'>
+                    <p className='text-[10px] text-text-muted uppercase tracking-widest font-bold mb-3'>{stat.label}</p>
+                    <p className='font-display font-bold text-[28px] text-text-primary leading-none tracking-tight'>{stat.value}</p>
+                  </Card>
                 ))}
               </div>
 
-              <p className='font-semibold text-[14px] text-gray-900 mb-4'>ჩემი განაცხადები</p>
+              <h3 className='font-bold text-lg text-text-primary tracking-tight mb-5'>ჩემი განაცხადები</h3>
 
-              <div className='flex flex-col gap-2'>
+              <div className='flex flex-col gap-3'>
                 {applications.map(app => (
-                  <div key={app.id} className='bg-white border border-gray-100 rounded-xl px-5 py-4 flex items-center gap-4'>
-                    <CompanyAvatar company={app.job.employer} size='sm' />
-                    <div className='flex-1 min-w-0'>
-                      <p
-                        className='text-[13.5px] font-medium text-gray-900 cursor-pointer hover:text-brand-600 transition-colors duration-150 leading-snug'
-                        onClick={() => navigate('/jobs/' + app.jobId)}>
-                        {app.job.title}
-                      </p>
-                      <p className='text-[12px] text-gray-400 mt-0.5'>
-                        {app.job.employer.companyName}
-                        {' · '}
-                        {new Date(app.appliedAt).toLocaleDateString()}
-                      </p>
+                  <Card key={app.id} padding='md' className='hover:border-border-strong transition-all group'>
+                    <div className='flex items-center gap-4'>
+                      <CompanyAvatar company={app.job.employer} size='sm' />
+                      <div className='flex-1 min-w-0'>
+                        <p
+                          className='text-md font-bold text-text-primary cursor-pointer group-hover:text-brand-400 transition-colors duration-150 truncate'
+                          onClick={() => navigate('/jobs/' + app.jobId)}>
+                          {app.job.title}
+                        </p>
+                        <p className='text-xs text-text-muted mt-1 font-medium'>
+                          {app.job.employer.companyName}
+                          <span className='mx-1.5 opacity-30'>·</span>
+                          {new Date(app.appliedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Badge variant={STATUS_STYLES[app.status]} dot>
+                        {STATUS_GEO[app.status]}
+                      </Badge>
                     </div>
-                    <span className={'inline-flex items-center gap-1.5 text-[11.5px] px-2.5 py-1 rounded-lg border font-medium flex-shrink-0 ' + STATUS_STYLES[app.status]}>
-                      <span className={'w-1.5 h-1.5 rounded-full flex-shrink-0 ' + STATUS_DOT[app.status]} />
-                      {STATUS_GEO[app.status]}
-                    </span>
-                  </div>
+                  </Card>
                 ))}
                 {applications.length === 0 && (
-                  <div className='bg-white border border-gray-100 rounded-xl text-center py-14'>
-                    <p className='text-[13px] text-gray-400 mb-2'>განაცხადი ჯერ არ გაქვთ</p>
-                    <span
-                      onClick={() => navigate('/')}
-                      className='text-[12.5px] text-brand-600 cursor-pointer hover:underline font-medium'>
-                      ვაკანსიების ძიება →
-                    </span>
-                  </div>
+                  <Card className='text-center py-16 bg-surface-50/50 border-dashed'>
+                    <p className='text-sm text-text-muted mb-6'>განაცხადი ჯერ არ გაქვთ</p>
+                    <Button onClick={() => navigate('/')}>ვაკანსიების ძიება</Button>
+                  </Card>
                 )}
               </div>
             </div>
@@ -918,45 +945,47 @@ export default function ProfilePage() {
           {/* ════ CANDIDATE: CV ═══════════════════════════════ */}
           {activePanel === 'cv' && user?.role === 'CANDIDATE' && (
             <div>
-              <p className='font-semibold text-[14px] text-gray-900 mb-5'>ჩემი CV</p>
+              <h3 className='font-bold text-lg text-text-primary tracking-tight mb-6'>ჩემი CV</h3>
 
               {profile?.cvUrl ? (
-                <div className='bg-white border border-gray-100 rounded-xl px-5 py-4 flex items-center gap-4 mb-4'>
-                  <div className='w-10 h-12 bg-brand-50 rounded-lg flex items-center justify-center flex-shrink-0'>
-                    <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='#6B46E0' strokeWidth='1.5'>
+                <Card padding='md' className='flex items-center gap-4 mb-6 bg-brand-600/5 border-brand-400/20'>
+                  <div className='w-12 h-12 bg-brand-600/10 rounded-xl flex items-center justify-center flex-shrink-0 text-brand-400 border border-brand-400/20'>
+                    <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
                       <path d='M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z'/><polyline points='14 2 14 8 20 8'/>
-                      <line x1='16' y1='13' x2='8' y2='13'/><line x1='16' y1='17' x2='8' y2='17'/><polyline points='10 9 9 9 8 9'/>
                     </svg>
                   </div>
                   <div className='flex-1 min-w-0'>
-                    <p className='text-[13.5px] font-medium text-gray-900'>ჩემი CV</p>
-                    <p className='text-[12px] text-gray-400 mt-0.5'>ატვირთულია · PDF</p>
+                    <p className='text-md font-bold text-text-primary'>ჩემი CV</p>
+                    <p className='text-xs text-text-muted mt-1 font-medium tracking-wide uppercase opacity-60'>ატვირთულია · PDF</p>
                   </div>
-                  <a href={assetUrl(profile.cvUrl)} target='_blank' rel='noreferrer'
-                    className='text-[12.5px] font-medium text-brand-600 hover:underline flex-shrink-0'>
+                  <Button variant='secondary' size='sm' onClick={() => window.open(assetUrl(profile.cvUrl), '_blank')}>
                     გახსნა ↗
-                  </a>
-                </div>
+                  </Button>
+                </Card>
               ) : (
-                <div className='bg-amber-50 border border-amber-100 rounded-xl px-5 py-4 mb-4 flex items-start gap-3'>
-                  <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='#D97706' strokeWidth='1.75' className='flex-shrink-0 mt-0.5'>
-                    <path d='M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z'/><line x1='12' y1='9' x2='12' y2='13'/><line x1='12' y1='17' x2='12.01' y2='17'/>
-                  </svg>
-                  <p className='text-[12.5px] text-amber-700'>CV არ გაქვთ ატვირთული. ვაკანსიაზე განაცხადისას გაგიჭირდებათ.</p>
-                </div>
+                <Card padding='md' className='flex items-start gap-4 mb-6 border-warning-500/20 bg-warning-500/5'>
+                  <div className='text-warning mt-1'>
+                    <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5'>
+                      <circle cx='12' cy='12' r='10'/><line x1='12' y1='8' x2='12' y2='12'/><line x1='12' y1='16' x2='12.01' y2='16'/>
+                    </svg>
+                  </div>
+                  <p className='text-sm text-warning-600 font-medium'>
+                    CV არ გაქვთ ატვირთული. ვაკანსიაზე განაცხადისას გაგიჭირდებათ.
+                  </p>
+                </Card>
               )}
 
-              <label className='flex flex-col items-center justify-center border-2 border-dashed border-gray-200 hover:border-brand-300 rounded-2xl p-10 text-center cursor-pointer transition-colors duration-200 group'>
+              <label className='flex flex-col items-center justify-center border-2 border-dashed border-border-subtle hover:border-brand-500/50 hover:bg-brand-500/5 rounded-2xl p-16 text-center cursor-pointer transition-all duration-300 group'>
                 <input type='file' accept='.pdf,.doc,.docx' className='hidden' onChange={handleCvUpload} />
-                <div className='w-10 h-10 rounded-xl bg-surface-100 group-hover:bg-brand-50 flex items-center justify-center mb-3 transition-colors duration-200'>
-                  <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='#9CA3AF' strokeWidth='1.5' className='group-hover:stroke-brand-500 transition-colors duration-200'>
+                <div className='w-14 h-14 rounded-2xl bg-surface-100 group-hover:bg-brand-600 group-hover:text-white flex items-center justify-center mb-5 transition-all duration-300 border border-border-subtle shadow-sm'>
+                  <svg width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
                     <path d='M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4'/><polyline points='17 8 12 3 7 8'/><line x1='12' y1='3' x2='12' y2='15'/>
                   </svg>
                 </div>
-                <p className='text-[13px] text-gray-500 group-hover:text-gray-700 font-medium transition-colors duration-200'>
-                  {profile?.cvUrl ? 'ახალი CV-ის ატვირთვა' : 'CV-ის ატვირთვა'}
+                <p className='text-md font-bold text-text-primary group-hover:text-brand-400 transition-colors duration-200'>
+                  {profile?.cvUrl ? 'ახალი CV-ის ატვირთვა' : 'ატვირთეთ თქვენი CV'}
                 </p>
-                <p className='text-[11.5px] text-gray-400 mt-1'>PDF ან Word · მაქს. 5MB</p>
+                <p className='text-xs text-text-muted mt-2 font-medium opacity-60'>PDF ან Word · მაქს. 5MB</p>
               </label>
             </div>
           )}
@@ -964,49 +993,48 @@ export default function ProfilePage() {
           {/* ════ CANDIDATE: Settings ════════════════════════ */}
           {activePanel === 'settings' && user?.role === 'CANDIDATE' && (
             <div>
-              <p className='font-semibold text-[14px] text-gray-900 mb-5'>პროფილის რედაქტირება</p>
-              <form onSubmit={handleUpdateProfile} className='bg-white border border-gray-100 rounded-2xl p-6 space-y-4'>
-                <div className='grid grid-cols-2 gap-4'>
-                  <div>
-                    <label className='text-[11.5px] text-gray-500 block mb-1.5 font-medium'>სახელი</label>
-                    <input value={form.firstName || ''} onChange={e => setForm(p => ({ ...p, firstName: e.target.value }))}
-                      placeholder='სახელი'
-                      className={INPUT} />
+              <h3 className='font-bold text-lg text-text-primary tracking-tight mb-6'>პროფილის რედაქტირება</h3>
+              <Card padding='lg'>
+                <form onSubmit={handleUpdateProfile} className='space-y-6'>
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
+                    <div>
+                      <label className='text-xs text-text-secondary block mb-2 font-medium ml-1'>სახელი</label>
+                      <input value={form.firstName || ''} onChange={e => setForm(p => ({ ...p, firstName: e.target.value }))}
+                        placeholder='სახელი'
+                        className={INPUT} />
+                    </div>
+                    <div>
+                      <label className='text-xs text-text-secondary block mb-2 font-medium ml-1'>გვარი</label>
+                      <input value={form.lastName || ''} onChange={e => setForm(p => ({ ...p, lastName: e.target.value }))}
+                        placeholder='გვარი'
+                        className={INPUT} />
+                    </div>
+                    <div>
+                      <label className='text-xs text-text-secondary block mb-2 font-medium ml-1'>ლოკაცია</label>
+                      <input value={form.location || ''} onChange={e => setForm(p => ({ ...p, location: e.target.value }))}
+                        placeholder='თბილისი'
+                        className={INPUT} />
+                    </div>
+                    <div>
+                      <label className='text-xs text-text-secondary block mb-2 font-medium ml-1'>მობილური</label>
+                      <input value={form.user?.phone || form.phone || ''} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
+                        placeholder='+995 555 00 00 00'
+                        className={INPUT} />
+                    </div>
                   </div>
                   <div>
-                    <label className='text-[11.5px] text-gray-500 block mb-1.5 font-medium'>გვარი</label>
-                    <input value={form.lastName || ''} onChange={e => setForm(p => ({ ...p, lastName: e.target.value }))}
-                      placeholder='გვარი'
+                    <label className='text-xs text-text-secondary block mb-2 font-medium ml-1'>სათაური / პოზიცია</label>
+                    <input value={form.headline || ''} onChange={e => setForm(p => ({ ...p, headline: e.target.value }))}
+                      placeholder='მაგ: React Developer · 4 წლიანი გამოცდილებით'
                       className={INPUT} />
                   </div>
-                  <div>
-                    <label className='text-[11.5px] text-gray-500 block mb-1.5 font-medium'>ლოკაცია</label>
-                    <input value={form.location || ''} onChange={e => setForm(p => ({ ...p, location: e.target.value }))}
-                      placeholder='თბილისი'
-                      className={INPUT} />
+                  <div className='flex justify-end pt-4 border-t border-border-subtle'>
+                    <Button type='submit' className='px-12'>პროფილის შენახვა</Button>
                   </div>
-                  <div>
-                    <label className='text-[11.5px] text-gray-500 block mb-1.5 font-medium'>მობილური</label>
-                    <input value={form.user?.phone || form.phone || ''} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
-                      placeholder='+995 555 00 00 00'
-                      className={INPUT} />
-                  </div>
-                </div>
-                <div>
-                  <label className='text-[11.5px] text-gray-500 block mb-1.5 font-medium'>სათაური / პოზიცია</label>
-                  <input value={form.headline || ''} onChange={e => setForm(p => ({ ...p, headline: e.target.value }))}
-                    placeholder='მაგ: React Developer · 4 წლიანი გამოცდილებით'
-                    className={INPUT} />
-                </div>
-                <div className='pt-1'>
-                  <button type='submit' className='h-10 px-6 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-[13px] font-medium transition-colors duration-150'>
-                    შენახვა
-                  </button>
-                </div>
-              </form>
+                </form>
+              </Card>
             </div>
           )}
-
         </main>
       </div>
     </div>
